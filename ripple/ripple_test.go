@@ -1,6 +1,8 @@
 package ripple
 
 import (
+	"io"
+	"net/http"
 	"strings"
 	"testing"
 )
@@ -67,4 +69,30 @@ func TestMakeMethodName(t *testing.T) {
 			t.Errorf("Expected %s; Got %s", d.expected, output)
 		}
 	}	
+}
+
+type ControllerTesters struct {
+	Dep Dependencies
+}
+func (this *ControllerTesters) Get() {}
+func (this *ControllerTesters) Post() {}
+func (this *ControllerTesters) Patch() {}
+func (this *ControllerTesters) GetFriends() {}
+
+func TestMatchRequest(t *testing.T) {
+	type MatchRequestTest struct {
+		method string
+		url string
+		controller string
+		action string
+	}
+	app := NewApplication()
+	app.RegisterController("testers", &ControllerTesters{})
+	app.AddRoute(Route{ Pattern: ":_controller/:id/:_action" })
+	var reader io.Reader
+	request, _ := http.NewRequest("GET", "http://localhost:8080/testers/123/friends", reader)
+	result := app.matchRequest(request)
+	
+	
+	t.Log("test: " + result.ControllerName + " " + result.ActionName)
 }

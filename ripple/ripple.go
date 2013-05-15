@@ -75,7 +75,19 @@ func makeMethodName(requestMethod string, actionName string) string {
 	return strings.Title(strings.ToLower(requestMethod)) + strings.Title(actionName)	
 }
 
-func (this *Application) Dispatch(request *http.Request) {
+type MatchRequestResult struct {
+	Success bool
+	ControllerName string
+	ActionName string
+	ControllerValue reflect.Value
+	ControllerMethod reflect.Value
+	Params map[string] string
+}
+
+func (this *Application) matchRequest(request *http.Request) MatchRequestResult {
+	var output MatchRequestResult
+	output.Success = false
+	
 	path := request.URL.Path
 	pathTokens := splitPath(path)
 		
@@ -128,12 +140,23 @@ func (this *Application) Dispatch(request *http.Request) {
 		controllerMethod := controllerVal.MethodByName(methodName)
 		if !controllerMethod.IsValid() { continue }
 		
-		dep := controllerVal.Elem().FieldByName("Dep").Addr().Interface().(*Dependencies)
-		dep.Request = request
-		dep.Params = params
-		controllerMethod.Call(nil)
-		return
+		output.Success = true
+		output.ControllerName = controllerName
+		output.ActionName = actionName
+		output.ControllerValue = controllerVal
+		output.ControllerMethod = controllerMethod
+		output.Params = params
 	}
 	
-	log.Println("No match: " + request.URL.Path)
+	return output
+}
+
+func (this *Application) Dispatch(request *http.Request) {
+	r := this.matchRequest(request)
+	if !r.Success { return }
+	
+	dep := r.ControllerValue.Elem().FieldByName("Dep").Addr().Interface().(*Dependencies)
+	dep.Request = request
+	dep.Params = r.Params
+	r.ControllerMethod.Call(nil)
 }
