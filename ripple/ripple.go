@@ -1,7 +1,7 @@
 package ripple
 
 import (
-	"fmt"
+	"log"
 	"strings"
 	"reflect"
 	"net/http"
@@ -29,12 +29,33 @@ func NewApplication() Application {
 	return output
 }
 
+func checkControllerType(controller interface{}) {
+	controllerVal := reflect.ValueOf(controller)
+	dep := controllerVal.Elem().FieldByName("Dep")
+	if !dep.IsValid() {
+		log.Panicf("\"%s\" controller must have a `Dep ripple.Dependencies` field.\n", controllerVal.Elem().Type())
+	}
+	if dep.Type() != reflect.TypeOf(Dependencies{}) {
+		log.Panicf("\"%s\" controller `Dep` field type must be `ripple.Dependencies`.\n", controllerVal.Elem().Type())
+	}
+}
+
+func (this *Application) checkRoute(route Route) {
+	if route.Controller != "" {
+		_, exists := this.controllers[route.Controller]
+		if !exists {
+			log.Panicf("\"%s\" controller does not exist.")
+		}
+	}
+}
+
 func (this *Application) RegisterController(name string, controller interface{}) {
-	// TODO: check that controller satisfies interface
+	checkControllerType(controller)
 	this.controllers[name] = controller
 }
 
 func (this *Application) AddRoute(route Route) {
+	this.checkRoute(route)
 	this.routes = append(this.routes, route)
 }
 
@@ -48,6 +69,10 @@ func splitPath(path string) []string {
 		if len(e) > 0 { output = append(output, e) }
 	} 
 	return output
+}
+
+func makeMethodName(requestMethod string, actionName string) string {
+	return strings.Title(strings.ToLower(requestMethod)) + strings.Title(actionName)	
 }
 
 func (this *Application) Dispatch(request *http.Request) {
@@ -95,28 +120,20 @@ func (this *Application) Dispatch(request *http.Request) {
 		}
 		
 		controller, exists = this.controllers[controllerName]
-		if !exists {
-			// warn?
-			continue
-		}
+		if !exists { continue }
 		
-		methodName := strings.Title(strings.ToLower(request.Method)) + strings.Title(actionName)	
+		methodName := makeMethodName(request.Method, actionName)
 		controllerVal := reflect.ValueOf(controller)
 				
 		controllerMethod := controllerVal.MethodByName(methodName)
-		if !controllerMethod.IsValid() {
-			// warn?
-			continue
-		}
+		if !controllerMethod.IsValid() { continue }
 		
-		_ = fmt.Println
-		
-		dep := controllerVal.Elem().Field(0).Addr().Interface().(*Dependencies)
+		dep := controllerVal.Elem().FieldByName("Dep").Addr().Interface().(*Dependencies)
 		dep.Request = request
 		dep.Params = params
 		controllerMethod.Call(nil)
 		return
 	}
 	
-	fmt.Println("No match: " + request.URL.Path)
+	log.Println("No match: " + request.URL.Path)
 }

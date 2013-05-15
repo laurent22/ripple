@@ -8,11 +8,11 @@ import (
 )
 
 type ControllerUsers struct {
-	D ripple.Dependencies;
+	Dep ripple.Dependencies
 }
 
 type ControllerSessions struct {
-	D ripple.Dependencies;
+	Dep ripple.Dependencies;
 }
 
 func (this *ControllerUsers) Get() {
@@ -29,7 +29,7 @@ func (this *ControllerUsers) Patch() {
 
 func (this *ControllerUsers) GetFriends() {
 	fmt.Println("get friends")
-	fmt.Println(this.D)
+	fmt.Println(this.Dep)
 }
 
 func (this *ControllerSessions) GetNew() {
