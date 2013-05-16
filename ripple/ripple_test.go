@@ -51,12 +51,12 @@ func TestMakeMethodName(t *testing.T) {
 }
 
 type ControllerTesters struct {}
-func (this *ControllerTesters) Get() {}
-func (this *ControllerTesters) Post() {}
-func (this *ControllerTesters) Patch() {}
-func (this *ControllerTesters) GetTasks() {}
+func (this *ControllerTesters) Get(ctx *Context) {}
+func (this *ControllerTesters) Post(ctx *Context) {}
+func (this *ControllerTesters) Patch(ctx *Context) {}
+func (this *ControllerTesters) GetTasks(ctx *Context) {}
 
-func TestMatchRequest(t *testing.T) {
+func TestMatchRequest(t *testing.T) {		
 	type MatchRequestTest struct {
 		method string
 		url string

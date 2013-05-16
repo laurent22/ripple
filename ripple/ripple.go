@@ -144,9 +144,9 @@ func (this *Application) Dispatch(request *http.Request) {
 	if !r.Success { return }
 	
 	ctx := new(Context)
-	var args []reflect.Value
 	ctx.Request = request
 	ctx.Params = r.Params
+	var args []reflect.Value
 	args = append(args, reflect.ValueOf(ctx))
 	
 	r.ControllerMethod.Call(args)
