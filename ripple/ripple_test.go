@@ -86,7 +86,7 @@ func TestMatchRequest(t *testing.T) {
 		{ "GET", "/testers3/new", true, "testers3", "new", map[string]string{} },
 		{ "GET", "/testers3/nothere", false, "", "", map[string]string{} },
 		{ "POST", "/testers3/custom/something", true, "testers3", "custom", map[string]string{} },
-		{ "POST", "/testers3/custom/123/456/789", true, "testers3", "custom", map[string]string{"one":"123","two":"456","three":"789"} },
+		{ "POST", "/testers3/custom/123/456/789", true, "testers3", "custom", map[string]string{"one":"123", "two":"456", "three":"789"} },
 	}	
 	app := NewApplication()
 	app.RegisterController("testers", &ControllerTesters{})
@@ -132,7 +132,8 @@ type ControllerTesters2 struct {
 	GetContext *Context
 }
 func (this *ControllerTesters2) Get(ctx *Context) {
-	this.GetContext = ctx	
+	this.GetContext = ctx
+	ctx.Response.Status = 202
 }
 
 func TestDispatch(t *testing.T) {
@@ -143,7 +144,7 @@ func TestDispatch(t *testing.T) {
 	app.AddRoute(Route{ Pattern: ":_controller/:id" })
 	var reader io.Reader
 	request, _ := http.NewRequest("GET", "/testers2/abcd", reader)
-	app.Dispatch(request)
+	context := app.Dispatch(request)
 	
 	paramId, ok := controller.GetContext.Params["id"]
 	if !ok || paramId != "abcd" {
@@ -152,4 +153,12 @@ func TestDispatch(t *testing.T) {
 	if controller.GetContext.Request == nil {
 		t.Errorf("Controller action got a nil request.")
 	}
+	if controller.GetContext.Response.Status != 202 {
+		t.Errorf("Controller response has not been modified. Got %d, expected %d", controller.GetContext.Response.Status, 202)
+	}
+	if context.Response.Status != 202 {
+		t.Errorf("Controller response has not been modified. Got %d, expected %d", context.Response.Status, 202)
+	}
 }
+
+// TODO: test 404

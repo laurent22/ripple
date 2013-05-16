@@ -1,15 +1,18 @@
 package ripple
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
-	"strings"
-	"reflect"
 	"net/http"
+	"reflect"
+	"strings"
 )
 
 type Context struct {
 	Params map[string] string;
 	Request *http.Request;
+	Response *Response;
 }
 
 type Application struct {
@@ -23,10 +26,43 @@ type Route struct {
 	Action string
 }
 
-func NewApplication() Application {
-	var output Application
+type Response struct {
+	Status int
+	Body interface{}
+}
+
+func NewResponse() *Response {
+	output := new(Response)
+	output.Status = 200
+	output.Body = nil
+	return output
+}
+
+func NewApplication() *Application {
+	output := new(Application)
 	output.controllers = make(map[string] interface{})
 	return output
+}
+
+func (this *Application) ServeHTTP(writter http.ResponseWriter, request *http.Request) {
+	context := this.Dispatch(request)
+	var body string
+	var err error
+	if context.Response.Body == nil {
+		body = "";
+	} else {
+		body, err = this.serializeResponseBody(context.Response.Body)
+	}
+	if err != nil {
+		// error 500?
+		return
+	}	
+	fmt.Fprintf(writter, body)
+}
+
+func (this *Application) serializeResponseBody(body interface{}) (string, error) {
+	output, err := json.Marshal(body)
+	return string(output), err
 }
 
 func (this *Application) checkRoute(route Route) {
@@ -139,18 +175,20 @@ func (this *Application) matchRequest(request *http.Request) MatchRequestResult 
 	return output
 }
 
-func (this *Application) Dispatch(request *http.Request) {
+func (this *Application) Dispatch(request *http.Request) *Context {
 	r := this.matchRequest(request)
 	if !r.Success {
 		log.Printf("No match for: %s %s\n", request.Method, request.URL)
-		return
+		return nil
 	}
 	
 	ctx := new(Context)
 	ctx.Request = request
+	ctx.Response = NewResponse()
 	ctx.Params = r.Params
 	var args []reflect.Value
 	args = append(args, reflect.ValueOf(ctx))
 	
 	r.ControllerMethod.Call(args)
+	return ctx
 }

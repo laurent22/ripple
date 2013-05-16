@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"encoding/json"
 	"./ripple"
 )
 
@@ -40,7 +41,14 @@ func handler(writter http.ResponseWriter, request *http.Request) {
 	fmt.Fprintf(writter, "Hi  %s!", request.URL.Path[1:])
 }
 
+type Essai struct {
+	One string
+	Two int	
+}
+
 func main() {
+	_ = fmt.Println
+	
 	var reader io.Reader
 	request, _ := http.NewRequest("GET", "http://localhost:8080/users/123/friends", reader)
 	
@@ -56,12 +64,21 @@ func main() {
 	request, _ = http.NewRequest("GET", "http://localhost:8080/sessions/new", reader)
 	app.Dispatch(request)
 	
+	test := ripple.NewResponse()
+	
+	body := Essai{ One: "something", Two: 123456 }
+	test.Body = body
+	
+	b, _ := json.Marshal(test.Body)
+		
+	fmt.Println(string(b))
+	
 	// request, _ = http.NewRequest("GET", "http://localhost:8080/users/123", reader)
 	// app.Dispatch(request)
 	
 	//request, _ = http.NewRequest("GET", "http://localhost:8080/users", reader)
 	//app.Dispatch(request)
 	
-	//http.HandleFunc("/", handler)
-	//http.ListenAndServe(":8080", nil)
+	//http.HandleFunc("/", app.RequestHandler())
+	//http.ListenAndServe(":8080", app)
 }
