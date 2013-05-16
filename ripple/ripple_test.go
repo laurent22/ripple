@@ -63,6 +63,10 @@ func (this *ControllerTesters) Post(ctx *Context) {}
 func (this *ControllerTesters) Patch(ctx *Context) {}
 func (this *ControllerTesters) GetTasks(ctx *Context) {}
 
+type ControllerTesters3 struct {}
+func (this *ControllerTesters3) GetNew(ctx *Context) {}
+func (this *ControllerTesters3) PostCustom(ctx *Context) {}
+
 func TestMatchRequest(t *testing.T) {		
 	type MatchRequestTest struct {
 		method string
@@ -79,9 +83,17 @@ func TestMatchRequest(t *testing.T) {
 		{ "GET", "/controllernotthere", false, "", "", map[string]string{} },
 		{ "GET", "/testers/123/oops", false, "", "", map[string]string{} },
 		{ "DELETE", "/testers/123/tasks", false, "", "", map[string]string{} },
+		{ "GET", "/testers3/new", true, "testers3", "new", map[string]string{} },
+		{ "GET", "/testers3/nothere", false, "", "", map[string]string{} },
+		{ "POST", "/testers3/custom/something", true, "testers3", "custom", map[string]string{} },
+		{ "POST", "/testers3/custom/123/456/789", true, "testers3", "custom", map[string]string{"one":"123","two":"456","three":"789"} },
 	}	
 	app := NewApplication()
 	app.RegisterController("testers", &ControllerTesters{})
+	app.RegisterController("testers3", &ControllerTesters3{})
+	app.AddRoute(Route{ Pattern: "testers3/:_action", Controller: "testers3" })
+	app.AddRoute(Route{ Pattern: "testers3/:_action/:one/:two/:three", Controller: "testers3" })
+	app.AddRoute(Route{ Pattern: "testers3/custom/something", Controller: "testers3", Action: "custom" })
 	app.AddRoute(Route{ Pattern: ":_controller/:id/:_action" })
 	app.AddRoute(Route{ Pattern: ":_controller/:id/" })
 	app.AddRoute(Route{ Pattern: ":_controller" })
