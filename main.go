@@ -8,31 +8,31 @@ import (
 )
 
 type ControllerUsers struct {
-	Dep ripple.Dependencies
+
 }
 
 type ControllerSessions struct {
-	Dep ripple.Dependencies;
+
 }
 
-func (this *ControllerUsers) Get() {
+func (this *ControllerUsers) Get(ctx *ripple.Context) {
 	fmt.Println("GET")
 }
 
-func (this *ControllerUsers) Post() {
+func (this *ControllerUsers) Post(ctx *ripple.Context) {
 	
 }
 
-func (this *ControllerUsers) Patch() {
+func (this *ControllerUsers) Patch(ctx *ripple.Context) {
 	
 }
 
-func (this *ControllerUsers) GetFriends() {
+func (this *ControllerUsers) GetFriends(ctx *ripple.Context) {
 	fmt.Println("get friends")
-	fmt.Println(this.Dep)
+	fmt.Println(ctx)
 }
 
-func (this *ControllerSessions) GetNew() {
+func (this *ControllerSessions) GetNew(ctx *ripple.Context) {
 	fmt.Println("Get new session")
 }
 

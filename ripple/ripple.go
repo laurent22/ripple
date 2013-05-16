@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-type Dependencies struct {
+type Context struct {
 	Params map[string] string;
 	Request *http.Request;
 }
@@ -29,17 +29,6 @@ func NewApplication() Application {
 	return output
 }
 
-func checkControllerType(controller interface{}) {
-	controllerVal := reflect.ValueOf(controller)
-	dep := controllerVal.Elem().FieldByName("Dep")
-	if !dep.IsValid() {
-		log.Panicf("\"%s\" controller must have a `Dep ripple.Dependencies` field.\n", controllerVal.Elem().Type())
-	}
-	if dep.Type() != reflect.TypeOf(Dependencies{}) {
-		log.Panicf("\"%s\" controller `Dep` field type must be `ripple.Dependencies`.\n", controllerVal.Elem().Type())
-	}
-}
-
 func (this *Application) checkRoute(route Route) {
 	if route.Controller != "" {
 		_, exists := this.controllers[route.Controller]
@@ -50,7 +39,6 @@ func (this *Application) checkRoute(route Route) {
 }
 
 func (this *Application) RegisterController(name string, controller interface{}) {
-	checkControllerType(controller)
 	this.controllers[name] = controller
 }
 
@@ -155,8 +143,11 @@ func (this *Application) Dispatch(request *http.Request) {
 	r := this.matchRequest(request)
 	if !r.Success { return }
 	
-	dep := r.ControllerValue.Elem().FieldByName("Dep").Addr().Interface().(*Dependencies)
-	dep.Request = request
-	dep.Params = r.Params
-	r.ControllerMethod.Call(nil)
+	ctx := new(Context)
+	var args []reflect.Value
+	ctx.Request = request
+	ctx.Params = r.Params
+	args = append(args, reflect.ValueOf(ctx))
+	
+	r.ControllerMethod.Call(args)
 }

@@ -31,27 +31,6 @@ func TestSplitPath(t *testing.T) {
 	}	
 }
 
-func TestRegisterInvalidController1(t *testing.T) {
-	type InvalidController struct {
-	}
-	defer func() {
-		recover()
-	}()
-	checkControllerType(&InvalidController{})
-	t.Error("Function did not panic.")
-}
-
-func TestRegisterInvalidController2(t *testing.T) {
-	type InvalidController struct {
-		Dep string
-	}
-	defer func() {
-		recover()
-	}()
-	checkControllerType(&InvalidController{})
-	t.Error("Function did not panic.")
-}
-
 func TestMakeMethodName(t *testing.T) {
 	type MakeMethodNameTest struct {
 		method string
@@ -71,9 +50,7 @@ func TestMakeMethodName(t *testing.T) {
 	}	
 }
 
-type ControllerTesters struct {
-	Dep Dependencies
-}
+type ControllerTesters struct {}
 func (this *ControllerTesters) Get() {}
 func (this *ControllerTesters) Post() {}
 func (this *ControllerTesters) Patch() {}
