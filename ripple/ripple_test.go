@@ -54,22 +54,57 @@ type ControllerTesters struct {}
 func (this *ControllerTesters) Get() {}
 func (this *ControllerTesters) Post() {}
 func (this *ControllerTesters) Patch() {}
-func (this *ControllerTesters) GetFriends() {}
+func (this *ControllerTesters) GetTasks() {}
 
 func TestMatchRequest(t *testing.T) {
 	type MatchRequestTest struct {
 		method string
 		url string
+		success bool
 		controller string
 		action string
+		params map[string]string
 	}
+	var matchRequestTests = []MatchRequestTest{
+		{ "GET", "/testers", true, "testers", "", map[string]string{} },
+		{ "GET", "/testers/123/tasks", true, "testers", "tasks", map[string]string{ "id": "123" } },
+		{ "POST", "/testers", true,  "testers", "", map[string]string{} },
+		{ "GET", "/controllernotthere", false, "", "", map[string]string{} },
+		{ "GET", "/testers/123/oops", false, "", "", map[string]string{} },
+		{ "DELETE", "/testers/123/tasks", false, "", "", map[string]string{} },
+	}	
 	app := NewApplication()
 	app.RegisterController("testers", &ControllerTesters{})
 	app.AddRoute(Route{ Pattern: ":_controller/:id/:_action" })
+	app.AddRoute(Route{ Pattern: ":_controller/:id/" })
+	app.AddRoute(Route{ Pattern: ":_controller" })
 	var reader io.Reader
-	request, _ := http.NewRequest("GET", "http://localhost:8080/testers/123/friends", reader)
-	result := app.matchRequest(request)
-	
-	
-	t.Log("test: " + result.ControllerName + " " + result.ActionName)
+	for _, d := range matchRequestTests {
+		request, _ := http.NewRequest(d.method, d.url, reader)
+		result := app.matchRequest(request)
+		if result.Success != d.success {
+			t.Errorf("%s %s: Expected success = '%b', got '%b'", d.method, d.url, d.success, result.Success)
+		}
+		if result.ControllerName != d.controller {
+			t.Errorf("%s %s: Expected controller '%s', got '%s'", d.method, d.url, d.controller, result.ControllerName)
+		}
+		if result.ActionName != d.action {
+			t.Errorf("%s %s: Expected action '%s', got '%s'", d.method, d.url, d.action, result.ActionName)
+		}
+		paramOk := true
+		if len(result.Params) != len(d.params) {
+			paramOk = false
+		} else {
+			for key, value := range result.Params {
+				eValue, eExists := d.params[key]
+				if !eExists || eValue != value {
+					paramOk = false
+					break
+				}
+			}
+		}
+		if !paramOk {
+			t.Errorf("%s %s: Param mismatch: Expected '%s', got '%s'", d.method, d.url, d.params, result.Params)
+		}
+	}
 }
