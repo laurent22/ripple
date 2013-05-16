@@ -50,6 +50,13 @@ func TestMakeMethodName(t *testing.T) {
 	}	
 }
 
+func TestAddRoutePanic(t *testing.T) {
+	app := NewApplication()
+	defer func() { recover() }()
+	app.AddRoute(Route{ Pattern: ":_controller", Controller: "nope" })
+	t.Error("Added invalid controller but AddRoute did not panic.")
+}
+
 type ControllerTesters struct {}
 func (this *ControllerTesters) Get(ctx *Context) {}
 func (this *ControllerTesters) Post(ctx *Context) {}
@@ -106,5 +113,31 @@ func TestMatchRequest(t *testing.T) {
 		if !paramOk {
 			t.Errorf("%s %s: Param mismatch: Expected '%s', got '%s'", d.method, d.url, d.params, result.Params)
 		}
+	}
+}
+
+type ControllerTesters2 struct {
+	GetContext *Context
+}
+func (this *ControllerTesters2) Get(ctx *Context) {
+	this.GetContext = ctx	
+}
+
+func TestDispatch(t *testing.T) {
+	var controller ControllerTesters2
+	
+	app := NewApplication()
+	app.RegisterController("testers2", &controller)
+	app.AddRoute(Route{ Pattern: ":_controller/:id" })
+	var reader io.Reader
+	request, _ := http.NewRequest("GET", "/testers2/abcd", reader)
+	app.Dispatch(request)
+	
+	paramId, ok := controller.GetContext.Params["id"]
+	if !ok || paramId != "abcd" {
+		t.Errorf("Controller action did not get correct parameter: %t/'%s' (Expected: 'abcd')", ok, paramId)
+	}
+	if controller.GetContext.Request == nil {
+		t.Errorf("Controller action got a nil request.")
 	}
 }

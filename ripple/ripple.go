@@ -33,7 +33,7 @@ func (this *Application) checkRoute(route Route) {
 	if route.Controller != "" {
 		_, exists := this.controllers[route.Controller]
 		if !exists {
-			log.Panicf("\"%s\" controller does not exist.")
+			log.Panicf("\"%s\" controller does not exist.\n", route.Controller)
 		}
 	}
 }
@@ -141,7 +141,10 @@ func (this *Application) matchRequest(request *http.Request) MatchRequestResult 
 
 func (this *Application) Dispatch(request *http.Request) {
 	r := this.matchRequest(request)
-	if !r.Success { return }
+	if !r.Success {
+		log.Printf("No match for: %s %s\n", request.Method, request.URL)
+		return
+	}
 	
 	ctx := new(Context)
 	ctx.Request = request
