@@ -27,6 +27,8 @@ type Route struct {
 	Action string
 }
 
+var responseDefaultStatus = 0
+
 type Response struct {
 	Status int
 	Body interface{}
@@ -34,7 +36,7 @@ type Response struct {
 
 func NewResponse() *Response {
 	output := new(Response)
-	output.Status = 200
+	output.Status = responseDefaultStatus
 	output.Body = nil
 	return output
 }
@@ -46,15 +48,15 @@ func NewApplication() *Application {
 }
 
 func (this *Application) ServeHTTP(writter http.ResponseWriter, request *http.Request) {
+	// TODO: handle status code
 	context := this.Dispatch(request)
 	if context == nil {
-		// Request did not match any route
-		// 404?
+		context.Response.Status = http.StatusNotFound
 		return
 	}
 	body, err := this.serializeResponseBody(context.Response.Body)
 	if err != nil {
-		// error 500?
+		context.Response.Status = http.StatusInternalServerError
 		return
 	}	
 	fmt.Fprintf(writter, body)
@@ -146,6 +148,7 @@ type MatchRequestResult struct {
 	ActionName string
 	ControllerValue reflect.Value
 	ControllerMethod reflect.Value
+	MatchedRoute Route
 	Params map[string] string
 }
 
@@ -210,6 +213,7 @@ func (this *Application) matchRequest(request *http.Request) MatchRequestResult 
 		output.ActionName = actionName
 		output.ControllerValue = controllerVal
 		output.ControllerMethod = controllerMethod
+		output.MatchedRoute = route
 		output.Params = params
 	}
 	

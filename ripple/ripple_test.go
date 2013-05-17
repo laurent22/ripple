@@ -96,7 +96,7 @@ func TestMatchRequest(t *testing.T) {
 	app.AddRoute(Route{ Pattern: "testers3/custom/something", Controller: "testers3", Action: "custom" })
 	app.AddRoute(Route{ Pattern: ":_controller/:id/:_action" })
 	app.AddRoute(Route{ Pattern: ":_controller/:id/" })
-	app.AddRoute(Route{ Pattern: ":_controller" })
+	app.AddRoute(Route{ Pattern: ":_controller/" })
 	var reader io.Reader
 	for _, d := range matchRequestTests {
 		request, _ := http.NewRequest(d.method, d.url, reader)
@@ -128,12 +128,37 @@ func TestMatchRequest(t *testing.T) {
 	}
 }
 
+type ControllerTesters4 struct {}
+func (this *ControllerTesters4) Get(ctx *Context) {}
+func (this *ControllerTesters4) GetOther(ctx *Context) {}
+
+func TestHardCodedAction(t *testing.T) {
+	var controller ControllerTesters4
+	
+	app := NewApplication()
+	app.RegisterController("testers", &controller)
+	app.AddRoute(Route{ Pattern: ":_controller/:id" })
+	app.AddRoute(Route{ Pattern: ":_controller/:id/other", Action: "other" })
+	var reader io.Reader
+	request, _ := http.NewRequest("GET", "/testers/abcd/other", reader)
+	r := app.matchRequest(request)
+	if r.ControllerName != "testers" {
+		t.Errorf("Expected %s, got %s", "testers", r.ControllerName)
+	}
+	if r.ActionName != "other" {
+		t.Errorf("Expected %s, got %s", "other", r.ActionName)
+	}
+}
+
 type ControllerTesters2 struct {
 	GetContext *Context
 }
 func (this *ControllerTesters2) Get(ctx *Context) {
 	this.GetContext = ctx
 	ctx.Response.Status = 202
+}
+func (this *ControllerTesters2) GetOther(ctx *Context) {
+	this.GetContext = ctx
 }
 
 func TestDispatch(t *testing.T) {
@@ -142,6 +167,7 @@ func TestDispatch(t *testing.T) {
 	app := NewApplication()
 	app.RegisterController("testers2", &controller)
 	app.AddRoute(Route{ Pattern: ":_controller/:id" })
+	app.AddRoute(Route{ Pattern: ":_controller/:id/other", Action: "other" })
 	var reader io.Reader
 	request, _ := http.NewRequest("GET", "/testers2/abcd", reader)
 	context := app.Dispatch(request)
@@ -158,6 +184,12 @@ func TestDispatch(t *testing.T) {
 	}
 	if context.Response.Status != 202 {
 		t.Errorf("Controller response has not been modified. Got %d, expected %d", context.Response.Status, 202)
+	}
+	
+	request, _ = http.NewRequest("GET", "/testers2/abcd/other", reader)
+	context = app.Dispatch(request)
+	if context.Response.Status != responseDefaultStatus {
+		t.Errorf("Response status is not set to correct default. Expected %d, got %d", responseDefaultStatus, context.Response.Status)
 	}
 }
 
