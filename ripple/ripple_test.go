@@ -161,4 +161,43 @@ func TestDispatch(t *testing.T) {
 	}
 }
 
+func TestSerializeResponseBody(t *testing.T) {
+	type SerializeTest struct {
+		input interface{}
+		expected string
+		success bool
+	}
+	type StructTest struct {
+		Something string
+	}
+	var serializeTests = []SerializeTest{
+		{ "abcdef", "abcdef", true },
+		{ 123456, "123456", true },
+		{ 123.45000, "123.45", true },
+		{ nil, "", true },
+		{ -12, "-12", true },
+		{ true, "true", true },
+		{ false, "false", true },
+		{ StructTest{ Something: "hello" }, "{\"Something\":\"hello\"}", true },
+	}
+	
+	app := NewApplication()
+	
+	for _, d := range serializeTests {
+		s, err := app.serializeResponseBody(d.input)
+		if err == nil && !d.success {
+			t.Errorf("Serialization should have failed.")
+		}
+		if err != nil && d.success {
+			t.Errorf("Serialization should have succeeded.")
+		}
+		if s != d.expected {
+			t.Errorf("Bad serialization. Expected %s, Got %s", d.expected, s)
+		}
+	}
+}
+
 // TODO: test 404
+// TODO: test serving requests
+// TODO: Return correct mime type
+// TODO: handle accept mime type?

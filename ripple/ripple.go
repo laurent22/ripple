@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -46,13 +47,12 @@ func NewApplication() *Application {
 
 func (this *Application) ServeHTTP(writter http.ResponseWriter, request *http.Request) {
 	context := this.Dispatch(request)
-	var body string
-	var err error
-	if context.Response.Body == nil {
-		body = "";
-	} else {
-		body, err = this.serializeResponseBody(context.Response.Body)
+	if context == nil {
+		// Request did not match any route
+		// 404?
+		return
 	}
+	body, err := this.serializeResponseBody(context.Response.Body)
 	if err != nil {
 		// error 500?
 		return
@@ -60,9 +60,50 @@ func (this *Application) ServeHTTP(writter http.ResponseWriter, request *http.Re
 	fmt.Fprintf(writter, body)
 }
 
-func (this *Application) serializeResponseBody(body interface{}) (string, error) {
-	output, err := json.Marshal(body)
-	return string(output), err
+func (this *Application) serializeResponseBody(body interface{}) (string, error) {	
+	if body == nil {
+		return "", nil
+	}
+	
+	var output string
+	var err error
+	err = nil
+		
+	switch body.(type) {
+		
+		case string:
+			
+			output = body.(string)
+		
+		case int, int8, int16, int32, int64:
+			
+			output = strconv.Itoa(body.(int))
+			
+		case uint, uint8, uint16, uint32, uint64:
+			
+			output = strconv.FormatUint(body.(uint64), 10)
+			
+		case float32, float64:
+			
+			output = strconv.FormatFloat(body.(float64), 'f', -1, 64)
+			
+		case bool:
+			
+			if body.(bool) {
+				output = "true"
+			} else {
+				output = "false"
+			}
+				
+		default:
+			
+			var b []byte
+			b, err = json.Marshal(body)
+			output = string(b)
+			
+	}
+	
+	return output, err
 }
 
 func (this *Application) checkRoute(route Route) {
