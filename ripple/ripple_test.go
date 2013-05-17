@@ -229,7 +229,35 @@ func TestSerializeResponseBody(t *testing.T) {
 	}
 }
 
+func TestPrepareServeHttpResponseData(t *testing.T) {
+	app := NewApplication()
+	type ResponseTest struct {
+		Status int
+		Body string
+		ExpectedStatus int
+		ExpectedBody string
+	}
+	var responseTests = []ResponseTest{
+		{ 200, "ok", 200, "ok" },
+		{ 200, "", 200, "" },
+		{ 202, "", 202, "" },
+	}
+	for _, d := range responseTests {
+		c := new(Context)
+		c.Response.Status = d.Status
+		c.Response.Body = d.Body
+		r := app.prepareServeHttpResponseData(c)
+		if r.Status != d.ExpectedStatus {
+			t.Errorf("Expected %d, Got %d", d.ExpectedStatus, r.Status)
+		}
+		if r.Body != d.ExpectedBody {
+			t.Errorf("Expected %d, Got %d", d.ExpectedBody, r.Body)
+		}
+	}
+}
+
 // TODO: test prepareServeHttpResponseData()
 // TODO: set mime type in Application
 // TODO: Return correct mime type
 // TODO: handle accept mime type?
+// TODO: handle :_controller/:id/other with Route.Action="" and URL=tester/123/other. Matched method shouldn't be TesterController::Get. Should probably just return a 404

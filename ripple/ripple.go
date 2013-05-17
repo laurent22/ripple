@@ -54,15 +54,13 @@ type serveHttpResponseData struct {
 
 // Helper function to prepare the response writter data for `ServeHTTP()`
 func (this *Application) prepareServeHttpResponseData(context *Context) serveHttpResponseData {
-	statusCode := responseDefaultStatus
+	var statusCode int
 	var body string
 	var err error
 	if context == nil {
 		statusCode = http.StatusNotFound
 	} else {
-		if context.Response.Status != responseDefaultStatus {
-			statusCode = context.Response.Status
-		}
+		statusCode = context.Response.Status
 	}
 	if context != nil {
 		body, err = this.serializeResponseBody(context.Response.Body)
