@@ -2,7 +2,6 @@ package ripple
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"reflect"
@@ -27,7 +26,7 @@ type Route struct {
 	Action string
 }
 
-var responseDefaultStatus = 0
+var responseDefaultStatus = http.StatusOK
 
 type Response struct {
 	Status int
@@ -47,19 +46,42 @@ func NewApplication() *Application {
 	return output
 }
 
-func (this *Application) ServeHTTP(writter http.ResponseWriter, request *http.Request) {
-	// TODO: handle status code
-	context := this.Dispatch(request)
+// Helper struct used by `prepareServeHttpResponseData()`
+type serveHttpResponseData struct {
+	Status int
+	Body string
+}
+
+// Helper function to prepare the response writter data for `ServeHTTP()`
+func (this *Application) prepareServeHttpResponseData(context *Context) serveHttpResponseData {
+	statusCode := responseDefaultStatus
+	var body string
+	var err error
 	if context == nil {
-		context.Response.Status = http.StatusNotFound
-		return
+		statusCode = http.StatusNotFound
+	} else {
+		if context.Response.Status != responseDefaultStatus {
+			statusCode = context.Response.Status
+		}
 	}
-	body, err := this.serializeResponseBody(context.Response.Body)
-	if err != nil {
-		context.Response.Status = http.StatusInternalServerError
-		return
-	}	
-	fmt.Fprintf(writter, body)
+	if context != nil {
+		body, err = this.serializeResponseBody(context.Response.Body)
+		if err != nil {
+			statusCode = http.StatusInternalServerError
+		}
+	}
+	
+	var output serveHttpResponseData
+	output.Status = statusCode
+	output.Body = body
+	return output
+}
+
+func (this *Application) ServeHTTP(writter http.ResponseWriter, request *http.Request) {
+	context := this.Dispatch(request)
+	r := this.prepareServeHttpResponseData(context)
+	writter.WriteHeader(r.Status)
+	writter.Write([]byte(r.Body))
 }
 
 func (this *Application) serializeResponseBody(body interface{}) (string, error) {	

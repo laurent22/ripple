@@ -229,7 +229,7 @@ func TestSerializeResponseBody(t *testing.T) {
 	}
 }
 
-// TODO: test 404
-// TODO: test serving requests
+// TODO: test prepareServeHttpResponseData()
+// TODO: set mime type in Application
 // TODO: Return correct mime type
 // TODO: handle accept mime type?
