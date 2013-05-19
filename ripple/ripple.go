@@ -18,6 +18,7 @@ type Context struct {
 type Application struct {
 	controllers map[string] interface{}
 	routes []Route
+	contentType string
 }
 
 type Route struct {
@@ -43,6 +44,7 @@ func NewResponse() *Response {
 func NewApplication() *Application {
 	output := new(Application)
 	output.controllers = make(map[string] interface{})
+	output.contentType = "application/json"
 	return output
 }
 
@@ -78,6 +80,7 @@ func (this *Application) prepareServeHttpResponseData(context *Context) serveHtt
 func (this *Application) ServeHTTP(writter http.ResponseWriter, request *http.Request) {
 	context := this.Dispatch(request)
 	r := this.prepareServeHttpResponseData(context)
+	writter.Header().Set("Content-Type", this.contentType)
 	writter.WriteHeader(r.Status)
 	writter.Write([]byte(r.Body))
 }
@@ -119,9 +122,13 @@ func (this *Application) serializeResponseBody(body interface{}) (string, error)
 				
 		default:
 			
-			var b []byte
-			b, err = json.Marshal(body)
-			output = string(b)
+			if this.contentType == "application/json" {
+				var b []byte
+				b, err = json.Marshal(body)
+				output = string(b)
+			} else {
+				log.Panicf("Unsupported content type: %s", this.contentType)
+			}
 			
 	}
 	

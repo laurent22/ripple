@@ -244,6 +244,7 @@ func TestPrepareServeHttpResponseData(t *testing.T) {
 	}
 	for _, d := range responseTests {
 		c := new(Context)
+		c.Response = NewResponse()
 		c.Response.Status = d.Status
 		c.Response.Body = d.Body
 		r := app.prepareServeHttpResponseData(c)
@@ -256,8 +257,4 @@ func TestPrepareServeHttpResponseData(t *testing.T) {
 	}
 }
 
-// TODO: test prepareServeHttpResponseData()
-// TODO: set mime type in Application
-// TODO: Return correct mime type
-// TODO: handle accept mime type?
-// TODO: handle :_controller/:id/other with Route.Action="" and URL=tester/123/other. Matched method shouldn't be TesterController::Get. Should probably just return a 404
+// TODO: How to handle request that map to an existing file?
