@@ -211,6 +211,8 @@ func TestSerializeResponseBody(t *testing.T) {
 		{ true, "true", true },
 		{ false, "false", true },
 		{ StructTest{ Something: "hello" }, "{\"Something\":\"hello\"}", true },
+		{ StructTest{ Something: "hello" }, "{\"Something\":\"hello\"}", true },
+		{ map[string]StructTest{ "one": {"123"} }, "{\"one\":{\"Something\":\"123\"}}", true },
 	}
 	
 	app := NewApplication()
