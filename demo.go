@@ -1,13 +1,16 @@
 package main
 
 import (
-	"encoding/json"
-	"strconv"
-	//"log"
-	"net/http"
-	"io/ioutil"
 	"./ripple"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"strconv"
 )
+
+// ======================================
+// Define some basic model for testing
+// ======================================
 
 type UserModel struct {
 	Id int
@@ -51,6 +54,10 @@ func (this *UserCollection) GetAll() []UserModel {
 
 var userCollection UserCollection
 var friends []FriendshipModel
+
+// ======================================
+// Define controller
+// ======================================
 
 type UserController struct {}
 
@@ -99,6 +106,7 @@ func (this *UserController) PostFriends(ctx *ripple.Context) {
 }
 
 func main() {
+	// Setup test models
 	userCollection.users = make(map[int]UserModel)
 	userCollection.Add(UserModel{ 0, "John" })
 	userCollection.Add(UserModel{ 0, "Paul" })
@@ -110,6 +118,7 @@ func main() {
 	friends = append(friends, FriendshipModel{2, 4})
 	friends = append(friends, FriendshipModel{3, 4})
 	
+	// Build and run the REST application
 	app := ripple.NewApplication()
 	app.RegisterController("users", &UserController{})
 	app.AddRoute(ripple.Route{ Pattern: ":_controller/:id/:_action" })
