@@ -2,11 +2,15 @@
 
 Ripple is a simple, yet flexible, REST API framework for the Go language (golang).
 
-Since building REST APIs often involves a lot of boiler plate codes (building routes, handling GET, POST, etc. for each resoute), the framework attemps to simplify this by making assumptions about the way REST API are usually created. The framework is flexible though, so if the defaults get in the way, you can change them.
+Since building REST APIs often involves a lot of boiler plate code (building routes, handling GET, POST, etc. for each route), the framework attempts to simplify this by making assumptions about the way REST APIs are usually structured. The framework is flexible though, so if the defaults get in the way, they can be changed.
 
 # Installation #
 
-To install the library, clone this git directory and import it in your main Go file using `import ./ripple`
+To install the library, clone this git directory:
+
+    git clone https://github.com/laurent22/ripple.git
+
+and import it in your main Go file using `import ./ripple`
 
 # Usage #
 
@@ -52,9 +56,15 @@ A Ripple application implements the [net.http Handler interface](http://golang.o
 
 	app := ripple.NewApplication()
 
+Then, after having setup the controllers and routes (see below), call:
+
+    http.ListenAndServe(":8080", app)
+    
+This will create a REST API on `http://localhost:8080`
+
 ## Controllers ##
 
-A Ripple controller is a `struct` with functions that handle the GET, POST, PUT, PATCH or DELETE HTTP methods (custom HTTP methods are also supported). The mapping between URLs and controller functions is done via routes (see below). Each function must start with the method name, followed by the (optional) action name. Each function receives a `ripple.Context` object that provides access to the full HTTP request, as well as the optional parameters. It also allows responding to the request. The code below shows a very simple controller that handles a GET method:
+A Ripple controller is a `struct` with functions that handle the GET, POST, PUT, etc. HTTP methods (custom HTTP methods are also supported). The mapping between URLs and controller functions is done via routes (see below). Each function must start with the method name, followed by the (optional) action name. Each function receives a `ripple.Context` object that provides access to the full HTTP request, as well as the optional parameters. It also allows responding to the request. The code below shows a very simple controller that handles a GET method:
 
 	type UserController struct {}
 
@@ -117,16 +127,16 @@ Then the routes can be created:
 	app.AddRoute(ripple.Route{ Pattern: ":_controller/:id/" })
 	app.AddRoute(ripple.Route{ Pattern: ":_controller" })
 
-Parameter can be defined by prefixing them with `:` and are then accessible in the context object via `ctx.Params["id"]`.
+Parameters can be defined by prefixing them with `:`; they are then accessible from the context object via `ctx.Params["id"]`.
 
 Route patterns also accept two special parameters:
 
 * `_controller`: Match any registered controller.
 * `_action`: Match any existing controller action.
 
-For example, the routes would match URLs such as "users/123", "images/7", "images/456/metadata", etc. You do not need to specify the supported HTTP methods - whether a method is supported or not is implied from your controller functions. For instance, if the controller has a GetMetadata method, then `GET images/456/metadata` is automatically supported. Likewise, if it does *not* have a `DeleteMetadata` method, `DELETE images/456/metadata` will not be supported.
+For example, the routes above would match URLs such as "users/123", "images/7", "images/456/metadata", etc. You do not need to specify the supported HTTP methods - whether a method is supported or not is implied from the controller functions. For instance, if the controller has a GetMetadata method, then `GET images/456/metadata` is automatically supported. Likewise, if it does *not* have a `DeleteMetadata` method, `DELETE images/456/metadata` will *not* be supported.
 
-Routing can be as flexible as needed. If the automatic mapping of `_controller` and `_action` don't do the job, you explicitly specify the controller and action. For example:
+Routing can be as flexible as needed. If the automatic mapping of `_controller` and `_action` doesn't do the job, it is possible to explicitly specify the controller and action. For example:
 
 	app.AddRoute(Route{ Pattern: "some/very/custom/url", Controller: "users", Action: "example" })
 	
@@ -134,11 +144,11 @@ With the above route, doing `GET some/very/custom/url` would call `UserControlle
 
 ## Models? ##
 
-Ripple does not have built-in support for models since data storage can vary a lot from one application to another. For an example on how to connect a controller to a model, see [demo/controllers/users.go](demo/controllers/users.go) and [demo/models/user.go](demo/models/user.go). Usually, you would inject a database connection into the controller then use that from the various actions.
+Ripple does not have built-in support for models since data storage can vary a lot from one application to another. For an example on how to connect a controller to a model, see [demo/controllers/users.go](demo/controllers/users.go) and [demo/models/user.go](demo/models/user.go). Usually, you would inject a database connection or other data source into the controller then use that from the various actions.
 
 # Testing ##
 
-Ripple is built with testability in mind. The whole framework is fully unit tested. Applications built with Ripple can also be easily unit tested. Each controller method takes a `ripple.Context` object as parameter, which can be mocked for unit testing. The framework also exposes the `Application::Dispatch` method, which can be used to test the response for a given HTTP request.
+Ripple is built with testability in mind. The whole framework is fully unit tested, and applications built with the framework can also be easily unit tested. Each controller method takes a `ripple.Context` object as parameter, which can be mocked for unit testing. The framework also exposes the `Application::Dispatch` method, which can be used to test the response for a given HTTP request.
 
 # Ripple API reference ##
 
