@@ -258,5 +258,3 @@ func TestPrepareServeHttpResponseData(t *testing.T) {
 		}
 	}
 }
-
-// TODO: How to handle request that map to an existing file?
