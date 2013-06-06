@@ -9,42 +9,62 @@ import (
 	"strings"
 )
 
+var responseDefaultStatus = http.StatusOK
+
+// A context holds information about the current request and response.
+// An object of type Context is passed to methods of a controller.
 type Context struct {
+	// The parameters matched in the current URL. A parameter is defined
+	// in a route by prefixing it with a ":". For example, ":id", ":name".
 	Params map[string] string;
+	// The actual HTTP request.
 	Request *http.Request;
+	// The response object.
 	Response *Response;
 }
 
+// Build a new context object.
+func NewContext() *Context {
+	return new(Context)
+}
+
+// A Ripple application. Use NewApplication() to build it.
 type Application struct {
 	controllers map[string] interface{}
 	routes []Route
 	contentType string
 }
 
+// Build a new application object.
+func NewApplication() *Application {
+	output := new(Application)
+	output.controllers = make(map[string] interface{})
+	output.contentType = "application/json"
+	return output
+}
+
+// A route maps a URL pattern to a controller and action.
+// See README.md for more information on the format of the pattern.
 type Route struct {
 	Pattern string
 	Controller string
 	Action string
 }
 
-var responseDefaultStatus = http.StatusOK
-
+// Holds information about the HTTP response.
 type Response struct {
+	// HTTP code (200, 404, etc.). Use the constants of the http package.
 	Status int
+	// The response body. It will be serialized automatically
+	// by the Ripple application before being sent to the client.
 	Body interface{}
 }
 
+// Build a new response object.
 func NewResponse() *Response {
 	output := new(Response)
 	output.Status = responseDefaultStatus
 	output.Body = nil
-	return output
-}
-
-func NewApplication() *Application {
-	output := new(Application)
-	output.controllers = make(map[string] interface{})
-	output.contentType = "application/json"
 	return output
 }
 
@@ -77,6 +97,7 @@ func (this *Application) prepareServeHttpResponseData(context *Context) serveHtt
 	return output
 }
 
+// Serves an HTTP request - implementation of net.http.ServeHTTP
 func (this *Application) ServeHTTP(writter http.ResponseWriter, request *http.Request) {
 	context := this.Dispatch(request)
 	r := this.prepareServeHttpResponseData(context)
@@ -144,10 +165,15 @@ func (this *Application) checkRoute(route Route) {
 	}
 }
 
+// Registers a controller. The name should be the same as in the URL path. For example
+// if the URL is "users/1", the name should be "users". The controller itself can be
+// any struct that implements HTTP method handlers. See README.md and the demo for more
+// details on the structure of a controller.
 func (this *Application) RegisterController(name string, controller interface{}) {
 	this.controllers[name] = controller
 }
 
+// Add a route to the application.
 func (this *Application) AddRoute(route Route) {
 	this.checkRoute(route)
 	this.routes = append(this.routes, route)
@@ -169,6 +195,7 @@ func makeMethodName(requestMethod string, actionName string) string {
 	return strings.Title(strings.ToLower(requestMethod)) + strings.Title(actionName)	
 }
 
+// Provided for debugging/testing purposes only.
 type MatchRequestResult struct {
 	Success bool
 	ControllerName string
@@ -247,6 +274,7 @@ func (this *Application) matchRequest(request *http.Request) MatchRequestResult 
 	return output
 }
 
+// Provided for debugging/testing purposes only.
 func (this *Application) Dispatch(request *http.Request) *Context {
 	r := this.matchRequest(request)
 	if !r.Success {
@@ -254,7 +282,7 @@ func (this *Application) Dispatch(request *http.Request) *Context {
 		return nil
 	}
 	
-	ctx := new(Context)
+	ctx := NewContext()
 	ctx.Request = request
 	ctx.Response = NewResponse()
 	ctx.Params = r.Params

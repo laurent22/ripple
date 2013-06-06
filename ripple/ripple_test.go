@@ -245,7 +245,7 @@ func TestPrepareServeHttpResponseData(t *testing.T) {
 		{ 202, "", 202, "" },
 	}
 	for _, d := range responseTests {
-		c := new(Context)
+		c := NewContext()
 		c.Response = NewResponse()
 		c.Response.Status = d.Status
 		c.Response.Body = d.Body
