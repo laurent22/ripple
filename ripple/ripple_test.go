@@ -9,94 +9,96 @@ import (
 
 func TestSplitPath(t *testing.T) {
 	type SplitPathTest struct {
-		input string
+		input    string
 		expected []string
 	}
 
 	var splitPathTests = []SplitPathTest{
-		{ "/users/123",  []string{ "users", "123" } },
-		{ "users/123",   []string{ "users", "123" } },
-		{ "users/123/",  []string{ "users", "123" } },
-		{ "users//123/", []string{ "users", "123" } },
-		{ "users", []string{ "users" } },
-		{ "", []string{} },
+		{"/users/123", []string{"users", "123"}},
+		{"users/123", []string{"users", "123"}},
+		{"users/123/", []string{"users", "123"}},
+		{"users//123/", []string{"users", "123"}},
+		{"users", []string{"users"}},
+		{"", []string{}},
 	}
-	
+
 	for _, d := range splitPathTests {
 		output := strings.Join(splitPath(d.input), ",")
 		expected := strings.Join(d.expected, ",")
 		if output != expected {
 			t.Errorf("Expected %s; Got %s", expected, output)
 		}
-	}	
+	}
 }
 
 func TestMakeMethodName(t *testing.T) {
 	type MakeMethodNameTest struct {
-		method string
-		action string
+		method   string
+		action   string
 		expected string
 	}
 	var makeMethodNameTests = []MakeMethodNameTest{
-		{ "GET", "user", "GetUser" },
-		{ "POST", "", "Post" },
-		{ "DELETE", "image", "DeleteImage" },
+		{"GET", "user", "GetUser"},
+		{"POST", "", "Post"},
+		{"DELETE", "image", "DeleteImage"},
 	}
 	for _, d := range makeMethodNameTests {
 		output := makeMethodName(d.method, d.action)
 		if output != d.expected {
 			t.Errorf("Expected %s; Got %s", d.expected, output)
 		}
-	}	
+	}
 }
 
 func TestAddRoutePanic(t *testing.T) {
 	app := NewApplication()
 	defer func() { recover() }()
-	app.AddRoute(Route{ Pattern: ":_controller", Controller: "nope" })
+	app.AddRoute(Route{Pattern: ":_controller", Controller: "nope"})
 	t.Error("Added invalid controller but AddRoute did not panic.")
 }
 
-type ControllerTesters struct {}
-func (this *ControllerTesters) Get(ctx *Context) {}
-func (this *ControllerTesters) Post(ctx *Context) {}
-func (this *ControllerTesters) Patch(ctx *Context) {}
+type ControllerTesters struct{}
+
+func (this *ControllerTesters) Get(ctx *Context)      {}
+func (this *ControllerTesters) Post(ctx *Context)     {}
+func (this *ControllerTesters) Patch(ctx *Context)    {}
 func (this *ControllerTesters) GetTasks(ctx *Context) {}
 
-type ControllerTesters3 struct {}
-func (this *ControllerTesters3) GetNew(ctx *Context) {}
+type ControllerTesters3 struct{}
+
+func (this *ControllerTesters3) GetNew(ctx *Context)     {}
 func (this *ControllerTesters3) PostCustom(ctx *Context) {}
 
-func TestMatchRequest(t *testing.T) {		
+func TestMatchRequest(t *testing.T) {
 	type MatchRequestTest struct {
-		method string
-		url string
-		success bool
+		method     string
+		url        string
+		success    bool
 		controller string
-		action string
-		params map[string]string
+		action     string
+		params     map[string]string
 	}
 	var matchRequestTests = []MatchRequestTest{
-		{ "GET", "/testers", true, "testers", "", map[string]string{} },
-		{ "GET", "/testers/123/tasks", true, "testers", "tasks", map[string]string{ "id": "123" } },
-		{ "POST", "/testers", true,  "testers", "", map[string]string{} },
-		{ "GET", "/controllernotthere", false, "", "", map[string]string{} },
-		{ "GET", "/testers/123/oops", false, "", "", map[string]string{} },
-		{ "DELETE", "/testers/123/tasks", false, "", "", map[string]string{} },
-		{ "GET", "/testers3/new", true, "testers3", "new", map[string]string{} },
-		{ "GET", "/testers3/nothere", false, "", "", map[string]string{} },
-		{ "POST", "/testers3/custom/something", true, "testers3", "custom", map[string]string{} },
-		{ "POST", "/testers3/custom/123/456/789", true, "testers3", "custom", map[string]string{"one":"123", "two":"456", "three":"789"} },
-	}	
+		{"GET", "/testers", true, "testers", "", map[string]string{}},
+		{"GET", "/testers/123/tasks", true, "testers", "tasks", map[string]string{"id": "123"}},
+		{"POST", "/testers", true, "testers", "", map[string]string{}},
+		{"GET", "/controllernotthere", false, "", "", map[string]string{}},
+		{"GET", "/testers/123/oops", false, "", "", map[string]string{}},
+		{"DELETE", "/testers/123/tasks", false, "", "", map[string]string{}},
+		{"GET", "/testers3/new", true, "testers3", "new", map[string]string{}},
+		{"GET", "/testers3/nothere", false, "", "", map[string]string{}},
+		{"POST", "/testers3/custom/something", true, "testers3", "custom", map[string]string{}},
+		{"POST", "/testers3/custom/123/456/789", true, "testers3", "custom", map[string]string{"one": "123", "two": "456", "three": "789"}},
+	}
 	app := NewApplication()
 	app.RegisterController("testers", &ControllerTesters{})
 	app.RegisterController("testers3", &ControllerTesters3{})
-	app.AddRoute(Route{ Pattern: "testers3/:_action", Controller: "testers3" })
-	app.AddRoute(Route{ Pattern: "testers3/:_action/:one/:two/:three", Controller: "testers3" })
-	app.AddRoute(Route{ Pattern: "testers3/custom/something", Controller: "testers3", Action: "custom" })
-	app.AddRoute(Route{ Pattern: ":_controller/:id/:_action" })
-	app.AddRoute(Route{ Pattern: ":_controller/:id/" })
-	app.AddRoute(Route{ Pattern: ":_controller/" })
+	app.AddRoute(Route{Pattern: "testers3/:_action", Controller: "testers3"})
+	app.AddRoute(Route{Pattern: "testers3/:_action/:one/:two/:three", Controller: "testers3"})
+	app.AddRoute(Route{Pattern: "testers3/custom/something", Controller: "testers3", Action: "custom"})
+	app.AddRoute(Route{Pattern: ":_controller/:id/:_action"})
+	app.AddRoute(Route{Pattern: ":_controller/:id/"})
+	app.AddRoute(Route{Pattern: ":_controller/"})
 	var reader io.Reader
 	for _, d := range matchRequestTests {
 		request, _ := http.NewRequest(d.method, d.url, reader)
@@ -128,17 +130,18 @@ func TestMatchRequest(t *testing.T) {
 	}
 }
 
-type ControllerTesters4 struct {}
-func (this *ControllerTesters4) Get(ctx *Context) {}
+type ControllerTesters4 struct{}
+
+func (this *ControllerTesters4) Get(ctx *Context)      {}
 func (this *ControllerTesters4) GetOther(ctx *Context) {}
 
 func TestHardCodedAction(t *testing.T) {
 	var controller ControllerTesters4
-	
+
 	app := NewApplication()
 	app.RegisterController("testers", &controller)
-	app.AddRoute(Route{ Pattern: ":_controller/:id" })
-	app.AddRoute(Route{ Pattern: ":_controller/:id/other", Action: "other" })
+	app.AddRoute(Route{Pattern: ":_controller/:id"})
+	app.AddRoute(Route{Pattern: ":_controller/:id/other", Action: "other"})
 	var reader io.Reader
 	request, _ := http.NewRequest("GET", "/testers/abcd/other", reader)
 	r := app.matchRequest(request)
@@ -153,6 +156,7 @@ func TestHardCodedAction(t *testing.T) {
 type ControllerTesters2 struct {
 	GetContext *Context
 }
+
 func (this *ControllerTesters2) Get(ctx *Context) {
 	this.GetContext = ctx
 	ctx.Response.Status = 202
@@ -163,15 +167,15 @@ func (this *ControllerTesters2) GetOther(ctx *Context) {
 
 func TestDispatch(t *testing.T) {
 	var controller ControllerTesters2
-	
+
 	app := NewApplication()
 	app.RegisterController("testers2", &controller)
-	app.AddRoute(Route{ Pattern: ":_controller/:id" })
-	app.AddRoute(Route{ Pattern: ":_controller/:id/other", Action: "other" })
+	app.AddRoute(Route{Pattern: ":_controller/:id"})
+	app.AddRoute(Route{Pattern: ":_controller/:id/other", Action: "other"})
 	var reader io.Reader
 	request, _ := http.NewRequest("GET", "/testers2/abcd", reader)
 	context := app.Dispatch(request)
-	
+
 	paramId, ok := controller.GetContext.Params["id"]
 	if !ok || paramId != "abcd" {
 		t.Errorf("Controller action did not get correct parameter: %t/'%s' (Expected: 'abcd')", ok, paramId)
@@ -185,7 +189,7 @@ func TestDispatch(t *testing.T) {
 	if context.Response.Status != 202 {
 		t.Errorf("Controller response has not been modified. Got %d, expected %d", context.Response.Status, 202)
 	}
-	
+
 	request, _ = http.NewRequest("GET", "/testers2/abcd/other", reader)
 	context = app.Dispatch(request)
 	if context.Response.Status != responseDefaultStatus {
@@ -195,28 +199,28 @@ func TestDispatch(t *testing.T) {
 
 func TestSerializeResponseBody(t *testing.T) {
 	type SerializeTest struct {
-		input interface{}
+		input    interface{}
 		expected string
-		success bool
+		success  bool
 	}
 	type StructTest struct {
 		Something string
 	}
 	var serializeTests = []SerializeTest{
-		{ "abcdef", "abcdef", true },
-		{ 123456, "123456", true },
-		{ 123.45000, "123.45", true },
-		{ nil, "", true },
-		{ -12, "-12", true },
-		{ true, "true", true },
-		{ false, "false", true },
-		{ StructTest{ Something: "hello" }, "{\"Something\":\"hello\"}", true },
-		{ StructTest{ Something: "hello" }, "{\"Something\":\"hello\"}", true },
-		{ map[string]StructTest{ "one": {"123"} }, "{\"one\":{\"Something\":\"123\"}}", true },
+		{"abcdef", "abcdef", true},
+		{123456, "123456", true},
+		{123.45000, "123.45", true},
+		{nil, "", true},
+		{-12, "-12", true},
+		{true, "true", true},
+		{false, "false", true},
+		{StructTest{Something: "hello"}, "{\"Something\":\"hello\"}", true},
+		{StructTest{Something: "hello"}, "{\"Something\":\"hello\"}", true},
+		{map[string]StructTest{"one": {"123"}}, "{\"one\":{\"Something\":\"123\"}}", true},
 	}
-	
+
 	app := NewApplication()
-	
+
 	for _, d := range serializeTests {
 		s, err := app.serializeResponseBody(d.input)
 		if err == nil && !d.success {
@@ -234,15 +238,15 @@ func TestSerializeResponseBody(t *testing.T) {
 func TestPrepareServeHttpResponseData(t *testing.T) {
 	app := NewApplication()
 	type ResponseTest struct {
-		Status int
-		Body string
+		Status         int
+		Body           string
 		ExpectedStatus int
-		ExpectedBody string
+		ExpectedBody   string
 	}
 	var responseTests = []ResponseTest{
-		{ 200, "ok", 200, "ok" },
-		{ 200, "", 200, "" },
-		{ 202, "", 202, "" },
+		{200, "ok", 200, "ok"},
+		{200, "", 200, ""},
+		{202, "", 202, ""},
 	}
 	for _, d := range responseTests {
 		c := NewContext()

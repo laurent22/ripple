@@ -5,17 +5,17 @@ package rippledemo
 // ======================================
 
 type UserModel struct {
-	Id int
-	Name string	
+	Id   int
+	Name string
 }
 
 type FriendshipModel struct {
 	UserId1 int
-	UserId2 int	
+	UserId2 int
 }
 
 type UserCollection struct {
-	Users map[int]UserModel
+	Users      map[int]UserModel
 	nextUserId int
 }
 

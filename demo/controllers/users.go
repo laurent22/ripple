@@ -14,27 +14,27 @@ import (
 
 type UserController struct {
 	userCollection rippledemo.UserCollection
-	friends []rippledemo.FriendshipModel
+	friends        []rippledemo.FriendshipModel
 }
 
 func NewUserController() *UserController {
 	output := new(UserController)
-	
+
 	// Build some data for testing. In a real application, this would probably
 	// come from a database. Also rather than being built here, it would
 	// be accessed directly from each individual controller action.
-	
+
 	output.userCollection.Users = make(map[int]rippledemo.UserModel)
-	output.userCollection.Add(rippledemo.UserModel{ 0, "John" })
-	output.userCollection.Add(rippledemo.UserModel{ 0, "Paul" })
-	output.userCollection.Add(rippledemo.UserModel{ 0, "Ringo" })
-	output.userCollection.Add(rippledemo.UserModel{ 0, "George" })
-	
+	output.userCollection.Add(rippledemo.UserModel{0, "John"})
+	output.userCollection.Add(rippledemo.UserModel{0, "Paul"})
+	output.userCollection.Add(rippledemo.UserModel{0, "Ringo"})
+	output.userCollection.Add(rippledemo.UserModel{0, "George"})
+
 	output.friends = append(output.friends, rippledemo.FriendshipModel{1, 2})
 	output.friends = append(output.friends, rippledemo.FriendshipModel{1, 3})
 	output.friends = append(output.friends, rippledemo.FriendshipModel{2, 4})
-	output.friends = append(output.friends, rippledemo.FriendshipModel{3, 4})	
-	
+	output.friends = append(output.friends, rippledemo.FriendshipModel{3, 4})
+
 	return output
 }
 
@@ -71,7 +71,7 @@ func (this *UserController) GetFriends(ctx *ripple.Context) {
 		} else if d.UserId2 == userId {
 			output = append(output, this.userCollection.Get(d.UserId1))
 		}
-	} 
+	}
 	ctx.Response.Body = output
 }
 

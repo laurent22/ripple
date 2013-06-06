@@ -16,11 +16,11 @@ var responseDefaultStatus = http.StatusOK
 type Context struct {
 	// The parameters matched in the current URL. A parameter is defined
 	// in a route by prefixing it with a ":". For example, ":id", ":name".
-	Params map[string] string;
+	Params map[string]string
 	// The actual HTTP request.
-	Request *http.Request;
+	Request *http.Request
 	// The response object.
-	Response *Response;
+	Response *Response
 }
 
 // Build a new context object.
@@ -30,15 +30,15 @@ func NewContext() *Context {
 
 // A Ripple application. Use NewApplication() to build it.
 type Application struct {
-	controllers map[string] interface{}
-	routes []Route
+	controllers map[string]interface{}
+	routes      []Route
 	contentType string
 }
 
 // Build a new application object.
 func NewApplication() *Application {
 	output := new(Application)
-	output.controllers = make(map[string] interface{})
+	output.controllers = make(map[string]interface{})
 	output.contentType = "application/json"
 	return output
 }
@@ -46,9 +46,9 @@ func NewApplication() *Application {
 // A route maps a URL pattern to a controller and action.
 // See README.md for more information on the format of the pattern.
 type Route struct {
-	Pattern string
+	Pattern    string
 	Controller string
-	Action string
+	Action     string
 }
 
 // Holds information about the HTTP response.
@@ -71,7 +71,7 @@ func NewResponse() *Response {
 // Helper struct used by `prepareServeHttpResponseData()`
 type serveHttpResponseData struct {
 	Status int
-	Body string
+	Body   string
 }
 
 // Helper function to prepare the response writter data for `ServeHTTP()`
@@ -90,7 +90,7 @@ func (this *Application) prepareServeHttpResponseData(context *Context) serveHtt
 			statusCode = http.StatusInternalServerError
 		}
 	}
-	
+
 	var output serveHttpResponseData
 	output.Status = statusCode
 	output.Body = body
@@ -106,53 +106,53 @@ func (this *Application) ServeHTTP(writter http.ResponseWriter, request *http.Re
 	writter.Write([]byte(r.Body))
 }
 
-func (this *Application) serializeResponseBody(body interface{}) (string, error) {	
+func (this *Application) serializeResponseBody(body interface{}) (string, error) {
 	if body == nil {
 		return "", nil
 	}
-	
+
 	var output string
 	var err error
 	err = nil
-		
+
 	switch body.(type) {
-		
-		case string:
-			
-			output = body.(string)
-		
-		case int, int8, int16, int32, int64:
-			
-			output = strconv.Itoa(body.(int))
-			
-		case uint, uint8, uint16, uint32, uint64:
-			
-			output = strconv.FormatUint(body.(uint64), 10)
-			
-		case float32, float64:
-			
-			output = strconv.FormatFloat(body.(float64), 'f', -1, 64)
-			
-		case bool:
-			
-			if body.(bool) {
-				output = "true"
-			} else {
-				output = "false"
-			}
-				
-		default:
-			
-			if this.contentType == "application/json" {
-				var b []byte
-				b, err = json.Marshal(body)
-				output = string(b)
-			} else {
-				log.Panicf("Unsupported content type: %s", this.contentType)
-			}
-			
+
+	case string:
+
+		output = body.(string)
+
+	case int, int8, int16, int32, int64:
+
+		output = strconv.Itoa(body.(int))
+
+	case uint, uint8, uint16, uint32, uint64:
+
+		output = strconv.FormatUint(body.(uint64), 10)
+
+	case float32, float64:
+
+		output = strconv.FormatFloat(body.(float64), 'f', -1, 64)
+
+	case bool:
+
+		if body.(bool) {
+			output = "true"
+		} else {
+			output = "false"
+		}
+
+	default:
+
+		if this.contentType == "application/json" {
+			var b []byte
+			b, err = json.Marshal(body)
+			output = string(b)
+		} else {
+			log.Panicf("Unsupported content type: %s", this.contentType)
+		}
+
 	}
-	
+
 	return output, err
 }
 
@@ -181,51 +181,59 @@ func (this *Application) AddRoute(route Route) {
 
 func splitPath(path string) []string {
 	var output []string
-	if len(path) == 0 { return output }
-	if path[0] == '/' { path = path[1:] }
+	if len(path) == 0 {
+		return output
+	}
+	if path[0] == '/' {
+		path = path[1:]
+	}
 	pathTokens := strings.Split(path, "/")
 	for i := 0; i < len(pathTokens); i++ {
 		e := pathTokens[i]
-		if len(e) > 0 { output = append(output, e) }
-	} 
+		if len(e) > 0 {
+			output = append(output, e)
+		}
+	}
 	return output
 }
 
 func makeMethodName(requestMethod string, actionName string) string {
-	return strings.Title(strings.ToLower(requestMethod)) + strings.Title(actionName)	
+	return strings.Title(strings.ToLower(requestMethod)) + strings.Title(actionName)
 }
 
 // Provided for debugging/testing purposes only.
 type MatchRequestResult struct {
-	Success bool
-	ControllerName string
-	ActionName string
-	ControllerValue reflect.Value
+	Success          bool
+	ControllerName   string
+	ActionName       string
+	ControllerValue  reflect.Value
 	ControllerMethod reflect.Value
-	MatchedRoute Route
-	Params map[string] string
+	MatchedRoute     Route
+	Params           map[string]string
 }
 
 func (this *Application) matchRequest(request *http.Request) MatchRequestResult {
 	var output MatchRequestResult
 	output.Success = false
-	
+
 	path := request.URL.Path
 	pathTokens := splitPath(path)
-		
+
 	for routeIndex := 0; routeIndex < len(this.routes); routeIndex++ {
 		route := this.routes[routeIndex]
 		patternTokens := splitPath(route.Pattern)
-			
-		if len(patternTokens) != len(pathTokens) { continue }
-		
+
+		if len(patternTokens) != len(pathTokens) {
+			continue
+		}
+
 		var controller interface{}
 		var exists bool
-			
+
 		controllerName := ""
 		actionName := ""
-		notMached := false
-		params := make(map[string] string)
+		notMatched := false
+		params := make(map[string]string)
 		for i := 0; i < len(patternTokens); i++ {
 			patternToken := patternTokens[i]
 			pathToken := pathTokens[i]
@@ -234,34 +242,40 @@ func (this *Application) matchRequest(request *http.Request) MatchRequestResult 
 			} else if patternToken == ":_action" {
 				actionName = pathToken
 			} else if patternToken == pathToken {
-				
+
 			} else if patternToken[0] == ':' {
 				params[patternToken[1:]] = pathToken
 			} else {
-				notMached = true
+				notMatched = true
 				break
 			}
 		}
-		
-		if notMached { continue }
-		
+
+		if notMatched {
+			continue
+		}
+
 		if controllerName == "" {
 			controllerName = route.Controller
 		}
-		
+
 		if actionName == "" {
 			actionName = route.Action
 		}
-		
+
 		controller, exists = this.controllers[controllerName]
-		if !exists { continue }
-		
+		if !exists {
+			continue
+		}
+
 		methodName := makeMethodName(request.Method, actionName)
 		controllerVal := reflect.ValueOf(controller)
-				
+
 		controllerMethod := controllerVal.MethodByName(methodName)
-		if !controllerMethod.IsValid() { continue }
-		
+		if !controllerMethod.IsValid() {
+			continue
+		}
+
 		output.Success = true
 		output.ControllerName = controllerName
 		output.ActionName = actionName
@@ -270,7 +284,7 @@ func (this *Application) matchRequest(request *http.Request) MatchRequestResult 
 		output.MatchedRoute = route
 		output.Params = params
 	}
-	
+
 	return output
 }
 
@@ -281,14 +295,14 @@ func (this *Application) Dispatch(request *http.Request) *Context {
 		log.Printf("No match for: %s %s\n", request.Method, request.URL)
 		return nil
 	}
-	
+
 	ctx := NewContext()
 	ctx.Request = request
 	ctx.Response = NewResponse()
 	ctx.Params = r.Params
 	var args []reflect.Value
 	args = append(args, reflect.ValueOf(ctx))
-	
+
 	r.ControllerMethod.Call(args)
 	return ctx
 }
