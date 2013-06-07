@@ -240,10 +240,12 @@ func TestContextIsFullyInitialized(t *testing.T) {
 	if ctx.Response == nil {
 		t.Errorf("Context response not initialized.")
 	}
-	testing, ok := ctx.Params["id"]
-	if testing != "" || ok != false {
-		t.Errorf("Context params not initialized.")
-	}
+	defer func() {
+		if recover() != nil {
+			t.Errorf("Context params not initialized.")
+		}
+	}() 
+	ctx.Params["id"] = "123"
 }
 
 func TestPrepareServeHttpResponseData(t *testing.T) {

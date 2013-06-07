@@ -26,6 +26,7 @@ type Context struct {
 // Build a new context object.
 func NewContext() *Context {
 	output := new(Context)
+	output.Params = make(map[string]string)
 	output.Response = NewResponse()
 	return output
 }
