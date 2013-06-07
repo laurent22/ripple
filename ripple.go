@@ -25,7 +25,9 @@ type Context struct {
 
 // Build a new context object.
 func NewContext() *Context {
-	return new(Context)
+	output := new(Context)
+	output.Response = NewResponse()
+	return output
 }
 
 // A Ripple application. Use NewApplication() to build it.
@@ -298,7 +300,6 @@ func (this *Application) Dispatch(request *http.Request) *Context {
 
 	ctx := NewContext()
 	ctx.Request = request
-	ctx.Response = NewResponse()
 	ctx.Params = r.Params
 	var args []reflect.Value
 	args = append(args, reflect.ValueOf(ctx))

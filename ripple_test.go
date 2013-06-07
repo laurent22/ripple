@@ -235,6 +235,17 @@ func TestSerializeResponseBody(t *testing.T) {
 	}
 }
 
+func TestContextIsFullyInitialized(t *testing.T) {
+	ctx := NewContext()
+	if ctx.Response == nil {
+		t.Errorf("Context response not initialized.")
+	}
+	testing, ok := ctx.Params["id"]
+	if testing != "" || ok != false {
+		t.Errorf("Context params not initialized.")
+	}
+}
+
 func TestPrepareServeHttpResponseData(t *testing.T) {
 	app := NewApplication()
 	type ResponseTest struct {
