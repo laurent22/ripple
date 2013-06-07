@@ -18,47 +18,53 @@ Have a look at [demo/demo.go](demo/demo.go) and [demo/demo_client.go](demo/demo_
 
 In general, the steps to build a REST application are as follow:
 
-	package main
+``` go
+package main
 
-	import (
-		"./ripple"
-		"./controllers"
-		"net/http"
-	)
+import (
+	"./ripple"
+	"./controllers"
+	"net/http"
+)
 
-	func main() {	
-		// Build the REST application
-		
-		app := ripple.NewApplication()
-		
-		// Create a controller and register it. Any number of controllers
-		// can be registered that way.
-		
-		userController := rippledemo.NewUserController()
-		app.RegisterController("users", userController)
-		
-		// Setup the routes. The special patterns `_controller` will automatically match
-		// an existing controller, as defined above. Likewise, `_action` will match any 
-		// existing action.
-		
-		app.AddRoute(ripple.Route{ Pattern: ":_controller/:id/:_action" })
-		app.AddRoute(ripple.Route{ Pattern: ":_controller/:id/" })
-		app.AddRoute(ripple.Route{ Pattern: ":_controller" })
-		
-		// Start the server
-		
-		http.ListenAndServe(":8080", app)
-	}
+func main() {	
+	// Build the REST application
+	
+	app := ripple.NewApplication()
+	
+	// Create a controller and register it. Any number of controllers
+	// can be registered that way.
+	
+	userController := rippledemo.NewUserController()
+	app.RegisterController("users", userController)
+	
+	// Setup the routes. The special patterns `_controller` will automatically match
+	// an existing controller, as defined above. Likewise, `_action` will match any 
+	// existing action.
+	
+	app.AddRoute(ripple.Route{ Pattern: ":_controller/:id/:_action" })
+	app.AddRoute(ripple.Route{ Pattern: ":_controller/:id/" })
+	app.AddRoute(ripple.Route{ Pattern: ":_controller" })
+	
+	// Start the server
+	
+	http.ListenAndServe(":8080", app)
+}
+```
 
 ## Application ##
 
 A Ripple application implements the [net.http Handler interface](http://golang.org/pkg/net/http/#Handler) and thus can be used with any Go server function that accepts this interface, including `ListenAndServe` or `ListenAndServeTLS`. To build a new application, call:
 
-	app := ripple.NewApplication()
+``` go
+app := ripple.NewApplication()
+```
 
 Then, after having setup the controllers and routes (see below), call:
 
-    http.ListenAndServe(":8080", app)
+``` go
+http.ListenAndServe(":8080", app)
+```
     
 This will create a REST API on `http://localhost:8080`
 
@@ -66,66 +72,75 @@ This will create a REST API on `http://localhost:8080`
 
 A Ripple controller is a `struct` with functions that handle the GET, POST, PUT, etc. HTTP methods (custom HTTP methods are also supported). The mapping between URLs and controller functions is done via routes (see below). Each function must start with the method name, followed by the (optional) action name. Each function receives a `ripple.Context` object that provides access to the full HTTP request, as well as the optional parameters. It also allows responding to the request. The code below shows a very simple controller that handles a GET method:
 
-	type UserController struct {}
+``` go
+type UserController struct {}
 
-	func (this *UserController) Get(ctx *ripple.Context) {
-		// Get the user ID:
-		userId, _ := strconv.Atoi(ctx.Params["id"])
-		if userId > 0 {
-			// If a user ID is provided, we return the user with this ID.
-			ctx.Response.Body = this.userCollection.Get(userId)
-		} else {
-			// If no user ID is provided, we return all the users.
-			ctx.Response.Body = this.userCollection.GetAll()
-		}
+func (this *UserController) Get(ctx *ripple.Context) {
+	// Get the user ID:
+	userId, _ := strconv.Atoi(ctx.Params["id"])
+	if userId > 0 {
+		// If a user ID is provided, we return the user with this ID.
+		ctx.Response.Body = this.userCollection.Get(userId)
+	} else {
+		// If no user ID is provided, we return all the users.
+		ctx.Response.Body = this.userCollection.GetAll()
 	}
-	
+}
+```
 
 In the above code, `ctx.Params["id"]` is used to retrieve the user ID, the response is provided by setting `ctx.Response.Body`. The body will automatically be serialized to JSON.
 
 To handle the POST method, you would write something like this:
 
-	func (this *UserController) Post(ctx *ripple.Context) {
-		body, _ := ioutil.ReadAll(ctx.Request.Body)
-		var user rippledemo.UserModel
-		json.Unmarshal(body, &user)
-		ctx.Response.Body = this.userCollection.Add(user)
-	}
+``` go
+func (this *UserController) Post(ctx *ripple.Context) {
+	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	var user rippledemo.UserModel
+	json.Unmarshal(body, &user)
+	ctx.Response.Body = this.userCollection.Add(user)
+}
+```
 
 Finally, more complex actions can be created. For example, this kind of function can be created to handle a REST URL such as `/users/123/friends`:
 
-	func (this *UserController) GetFriends(ctx *ripple.Context) {
-		userId, _ := strconv.Atoi(ctx.Params["id"])
-		var output []rippledemo.UserModel
-		for _, d := range this.friends {
-			if d.UserId1 == userId {
-				output = append(output, this.userCollection.Get(d.UserId2))
-			} else if d.UserId2 == userId {
-				output = append(output, this.userCollection.Get(d.UserId1))
-			}
-		} 
-		ctx.Response.Body = output
-	}
+``` go
+func (this *UserController) GetFriends(ctx *ripple.Context) {
+	userId, _ := strconv.Atoi(ctx.Params["id"])
+	var output []rippledemo.UserModel
+	for _, d := range this.friends {
+		if d.UserId1 == userId {
+			output = append(output, this.userCollection.Get(d.UserId2))
+		} else if d.UserId2 == userId {
+			output = append(output, this.userCollection.Get(d.UserId1))
+		}
+	} 
+	ctx.Response.Body = output
+}
+```
 
 ## Routes ##
 
 The routes map a given URL to a given controller / action. Before being used in a route, the controllers must first be registered:
 
-	// Create some example controllers:
-	
-	userController = new(UserController)
-	imageController = new(ImageController)
-	
-	// And register them:
-	
-	app.RegisterController("users", userController)
-	app.RegisterController("images", imageController)
+``` go
+// Create some example controllers:
+
+userController = new(UserController)
+imageController = new(ImageController)
+
+// And register them:
+
+app.RegisterController("users", userController)
+app.RegisterController("images", imageController)
+```
 
 Then the routes can be created:
-	
-	app.AddRoute(ripple.Route{ Pattern: ":_controller/:id/:_action" })
-	app.AddRoute(ripple.Route{ Pattern: ":_controller/:id/" })
-	app.AddRoute(ripple.Route{ Pattern: ":_controller" })
+
+``` go
+app.AddRoute(ripple.Route{ Pattern: ":_controller/:id/:_action" })
+app.AddRoute(ripple.Route{ Pattern: ":_controller/:id/" })
+app.AddRoute(ripple.Route{ Pattern: ":_controller" })
+```
 
 Parameters can be defined by prefixing them with `:`; they are then accessible from the context object via `ctx.Params["id"]`.
 
@@ -138,7 +153,9 @@ For example, the routes above would match URLs such as "users/123", "images/7", 
 
 Routing can be as flexible as needed. If the automatic mapping of `_controller` and `_action` doesn't do the job, it is possible to explicitly specify the controller and action. For example:
 
-	app.AddRoute(Route{ Pattern: "some/very/custom/url", Controller: "users", Action: "example" })
+``` go
+app.AddRoute(Route{ Pattern: "some/very/custom/url", Controller: "users", Action: "example" })
+```
 	
 With the above route, doing `GET some/very/custom/url` would call `UserController::GetExample`
 
