@@ -192,8 +192,8 @@ func TestDispatch(t *testing.T) {
 
 	request, _ = http.NewRequest("GET", "/testers2/abcd/other", reader)
 	context = app.Dispatch(request)
-	if context.Response.Status != responseDefaultStatus {
-		t.Errorf("Response status is not set to correct default. Expected %d, got %d", responseDefaultStatus, context.Response.Status)
+	if context.Response.Status != http.StatusOK {
+		t.Errorf("Response status is not set to correct default. Expected %d, got %d", http.StatusOK, context.Response.Status)
 	}
 }
 

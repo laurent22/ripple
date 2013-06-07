@@ -9,8 +9,6 @@ import (
 	"strings"
 )
 
-var responseDefaultStatus = http.StatusOK
-
 // A context holds information about the current request and response.
 // An object of type Context is passed to methods of a controller.
 type Context struct {
@@ -66,7 +64,6 @@ type Response struct {
 // Build a new response object.
 func NewResponse() *Response {
 	output := new(Response)
-	output.Status = responseDefaultStatus
 	output.Body = nil
 	return output
 }
@@ -75,6 +72,14 @@ func NewResponse() *Response {
 type serveHttpResponseData struct {
 	Status int
 	Body   string
+}
+
+func defaultHttpStatus(method string) int {
+	output := http.StatusOK
+	if method == "POST" {
+		output = http.StatusCreated
+	}
+	return output
 }
 
 // Helper function to prepare the response writter data for `ServeHTTP()`
@@ -302,6 +307,7 @@ func (this *Application) Dispatch(request *http.Request) *Context {
 	ctx := NewContext()
 	ctx.Request = request
 	ctx.Params = r.Params
+	ctx.Response.Status = defaultHttpStatus(request.Method)
 	var args []reflect.Value
 	args = append(args, reflect.ValueOf(ctx))
 
