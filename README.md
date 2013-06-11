@@ -68,6 +68,22 @@ http.ListenAndServe(":8080", app)
     
 This will create a REST API on `http://localhost:8080`
 
+Ripple can also be used along other HTTP servers using `http.HandleFunc()` and accessing the `ServeHTTP()` function directly. For instance, to serve an HTML5/JS app under "/app" and the REST API under "/api", the following could be done:
+
+``` go
+// Handle the HTML5 app
+http.HandleFunc("/app/", someHandleFunc)
+
+// Handle the REST API	
+app.SetBaseUrl("/api/")
+http.HandleFunc("/api/", app.ServeHTTP) // Use the ServeHTTP function directly
+
+// Start the server
+http.ListenAndServe(":8080", nil)
+```
+
+Then the REST API will be at `http://localhost/api/:8080`, while the web application will be at `http://localhost/app/:8080`.
+
 ## Controllers ##
 
 A Ripple controller is a `struct` with functions that handle the GET, POST, PUT, etc. HTTP methods (custom HTTP methods are also supported). The mapping between URLs and controller functions is done via routes (see below). Each function must start with the method name, followed by the (optional) action name. Each function receives a `ripple.Context` object that provides access to the full HTTP request, as well as the optional parameters. It also allows responding to the request. The code below shows a very simple controller that handles a GET method:
