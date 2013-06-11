@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
@@ -34,6 +35,8 @@ type Application struct {
 	controllers map[string]interface{}
 	routes      []Route
 	contentType string
+	baseUrl     string
+	parsedBaseUrl *url.URL
 }
 
 // Build a new application object.
@@ -41,6 +44,7 @@ func NewApplication() *Application {
 	output := new(Application)
 	output.controllers = make(map[string]interface{})
 	output.contentType = "application/json"
+	output.SetBaseUrl("/")
 	return output
 }
 
@@ -80,6 +84,26 @@ func defaultHttpStatus(method string) int {
 		output = http.StatusCreated
 	}
 	return output
+}
+
+// Sets the base URL (default to "/"). The base URL will
+// be stripped from the beginning of the request URL. For
+// instance if the base URL is "/api/" and the client does
+// a request on "/api/images/1", the application will dispatch
+// "images/1". Specifying the full URL (with domain, etc.) is
+// not necessary.
+func (this *Application) SetBaseUrl(v string) {
+	this.baseUrl = v
+	var err error
+	this.parsedBaseUrl, err = url.Parse(this.baseUrl)
+	if err != nil {
+		log.Panicf("Invalid base URL: %s", this.baseUrl)
+	}
+}
+
+// Returns the base URL.
+func (this *Application) BaseUrl() string {
+	return this.baseUrl
 }
 
 // Helper function to prepare the response writter data for `ServeHTTP()`
@@ -150,13 +174,17 @@ func (this *Application) serializeResponseBody(body interface{}) (string, error)
 		}
 
 	default:
-
-		if this.contentType == "application/json" {
+		
+		contentType := this.contentType
+		if contentType != "application/json" { // Currently, only JSON is supported
+			log.Printf("Unsupported content type: %s! Defaulting to application/json.", this.contentType)
+			contentType = "application/json"
+		}
+		
+		if contentType == "application/json" {
 			var b []byte
 			b, err = json.Marshal(body)
 			output = string(b)
-		} else {
-			log.Panicf("Unsupported content type: %s", this.contentType)
 		}
 
 	}
@@ -223,10 +251,11 @@ type MatchRequestResult struct {
 func (this *Application) matchRequest(request *http.Request) MatchRequestResult {
 	var output MatchRequestResult
 	output.Success = false
-
+		
 	path := request.URL.Path
+	path = path[len(this.parsedBaseUrl.Path):len(path)]
 	pathTokens := splitPath(path)
-
+	
 	for routeIndex := 0; routeIndex < len(this.routes); routeIndex++ {
 		route := this.routes[routeIndex]
 		patternTokens := splitPath(route.Pattern)

@@ -275,3 +275,40 @@ func TestPrepareServeHttpResponseData(t *testing.T) {
 		}
 	}
 }
+
+func TestBaseUrl(t *testing.T) {
+	type MatchRequestTest struct {
+		baseUrl    string
+		url        string
+		success    bool
+		controller string
+		action     string
+	}
+	var matchRequestTests = []MatchRequestTest{
+		{"/", "/testers/123", true, "testers", ""},
+		{"/", "/api/testers/123", false, "", ""},
+		{"/api/", "/api/testers/123", true, "testers", ""},
+		{"/api/", "/api/testers/123/tasks", true, "testers", "tasks"},
+	}
+	
+	app := NewApplication()
+	app.RegisterController("testers", &ControllerTesters{})
+	app.AddRoute(Route{Pattern: ":_controller/:id"})
+	app.AddRoute(Route{Pattern: ":_controller/:id/:_action"})
+	
+	for _, d := range matchRequestTests {
+		var reader io.Reader
+		app.SetBaseUrl(d.baseUrl)
+		request, _ := http.NewRequest("GET", d.url, reader)
+		result := app.matchRequest(request)
+		if result.Success != d.success {
+			t.Errorf("Expected %t, got %t", d.success, result.Success)
+		}
+		if result.ControllerName != d.controller {
+			t.Errorf("Expected %s, got %s", d.controller, result.ControllerName)
+		}
+		if result.ActionName != d.action {
+			t.Errorf("Expected %s, got %s", d.action, result.ActionName)
+		}
+	}
+}
