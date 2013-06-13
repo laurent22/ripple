@@ -189,7 +189,7 @@ Ripple is built with testability in mind. The whole framework is fully unit test
 
 # Ripple API reference ##
 
-See the [Ripple GoDoc reference](http://godoc.org/github.com/laurent22/ripple/ripple) for the more information.
+See the [Ripple GoDoc reference](http://godoc.org/github.com/laurent22/ripple) for more information.
 
 # License #
 
