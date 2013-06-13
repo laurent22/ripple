@@ -12,6 +12,10 @@ To install the library, clone this git directory:
 
 and import it in your main Go file using `import ./ripple`
 
+# Demo #
+
+A simple todo demo is available there: [https://github.com/laurent22/ripple-demo](https://github.com/laurent22/ripple-demo)
+
 # Usage #
 
 Have a look at [demo/demo.go](demo/demo.go) and [demo/demo_client.go](demo/demo_client.go) for a simple example of a REST API application. 
