@@ -1,0 +1,259 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Ripple by laurent22</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Ripple</h1>
+        <p>Ripple is a REST API framework for the Go programming language. Demo is available below:</p>
+        <p class="view"><a href="https://github.com/laurent22/ripple">View the Project on GitHub <small>laurent22/ripple</small></a></p>
+        <ul>
+          <li><a href="https://github.com/laurent22/ripple/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/laurent22/ripple/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/laurent22/ripple">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="ripple-a-rest-api-framework-for-go" class="anchor" href="#ripple-a-rest-api-framework-for-go"><span class="octicon octicon-link"></span></a>Ripple, a REST API framework for Go</h1>
+
+<p>Ripple is a simple, yet flexible, REST API framework for the Go language (golang).</p>
+
+<p>Since building REST APIs often involves a lot of boiler plate code (building routes, handling GET, POST, etc. for each route), the framework attempts to simplify this by making assumptions about the way REST APIs are usually structured. The framework is flexible though, so if the defaults get in the way, they can be changed.</p>
+
+<h1>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h1>
+
+<p>To install the library, clone this git directory:</p>
+
+<pre><code>git clone https://github.com/laurent22/ripple.git
+</code></pre>
+
+<p>and import it in your main Go file using <code>import ./ripple</code></p>
+
+<h1>
+<a name="demo" class="anchor" href="#demo"><span class="octicon octicon-link"></span></a>Demo</h1>
+
+<p>A simple todo demo is available there: <a href="https://github.com/laurent22/ripple-demo">https://github.com/laurent22/ripple-demo</a></p>
+
+<h1>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h1>
+
+<p>Have a look at <a href="demo/demo.go">demo/demo.go</a> and <a href="demo/demo_client.go">demo/demo_client.go</a> for a simple example of a REST API application. </p>
+
+<p>In general, the steps to build a REST application are as follow:</p>
+
+<div class="highlight"><pre><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">"./ripple"</span>
+    <span class="s">"./controllers"</span>
+    <span class="s">"net/http"</span>
+<span class="p">)</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>   
+    <span class="c1">// Build the REST application</span>
+
+    <span class="nx">app</span> <span class="o">:=</span> <span class="nx">ripple</span><span class="p">.</span><span class="nx">NewApplication</span><span class="p">()</span>
+
+    <span class="c1">// Create a controller and register it. Any number of controllers</span>
+    <span class="c1">// can be registered that way.</span>
+
+    <span class="nx">userController</span> <span class="o">:=</span> <span class="nx">rippledemo</span><span class="p">.</span><span class="nx">NewUserController</span><span class="p">()</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">RegisterController</span><span class="p">(</span><span class="s">"users"</span><span class="p">,</span> <span class="nx">userController</span><span class="p">)</span>
+
+    <span class="c1">// Setup the routes. The special patterns `_controller` will automatically match</span>
+    <span class="c1">// an existing controller, as defined above. Likewise, `_action` will match any </span>
+    <span class="c1">// existing action.</span>
+
+    <span class="nx">app</span><span class="p">.</span><span class="nx">AddRoute</span><span class="p">(</span><span class="nx">ripple</span><span class="p">.</span><span class="nx">Route</span><span class="p">{</span> <span class="nx">Pattern</span><span class="p">:</span> <span class="s">":_controller/:id/:_action"</span> <span class="p">})</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">AddRoute</span><span class="p">(</span><span class="nx">ripple</span><span class="p">.</span><span class="nx">Route</span><span class="p">{</span> <span class="nx">Pattern</span><span class="p">:</span> <span class="s">":_controller/:id/"</span> <span class="p">})</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">AddRoute</span><span class="p">(</span><span class="nx">ripple</span><span class="p">.</span><span class="nx">Route</span><span class="p">{</span> <span class="nx">Pattern</span><span class="p">:</span> <span class="s">":_controller"</span> <span class="p">})</span>
+
+    <span class="c1">// Start the server</span>
+
+    <span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">":8080"</span><span class="p">,</span> <span class="nx">app</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+<h2>
+<a name="application" class="anchor" href="#application"><span class="octicon octicon-link"></span></a>Application</h2>
+
+<p>A Ripple application implements the <a href="http://golang.org/pkg/net/http/#Handler">net.http Handler interface</a> and thus can be used with any Go server function that accepts this interface, including <code>ListenAndServe</code> or <code>ListenAndServeTLS</code>. To build a new application, call:</p>
+
+<div class="highlight"><pre><span class="nx">app</span> <span class="o">:=</span> <span class="nx">ripple</span><span class="p">.</span><span class="nx">NewApplication</span><span class="p">()</span>
+</pre></div>
+
+<p>Then, after having setup the controllers and routes (see below), call:</p>
+
+<div class="highlight"><pre><span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">":8080"</span><span class="p">,</span> <span class="nx">app</span><span class="p">)</span>
+</pre></div>
+
+<p>This will create a REST API on <code>http://localhost:8080</code></p>
+
+<p>Ripple can also be used along other HTTP servers using <code>http.HandleFunc()</code> and accessing the <code>ServeHTTP()</code> function directly. For instance, to serve an HTML5/JS app under "/app" and the REST API under "/api", the following could be done:</p>
+
+<div class="highlight"><pre><span class="c1">// Handle the HTML5 app</span>
+<span class="nx">http</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">"/app/"</span><span class="p">,</span> <span class="nx">someHandleFunc</span><span class="p">)</span>
+
+<span class="c1">// Handle the REST API  </span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">SetBaseUrl</span><span class="p">(</span><span class="s">"/api/"</span><span class="p">)</span>
+<span class="nx">http</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">"/api/"</span><span class="p">,</span> <span class="nx">app</span><span class="p">.</span><span class="nx">ServeHTTP</span><span class="p">)</span> <span class="c1">// Use the ServeHTTP function directly</span>
+
+<span class="c1">// Start the server</span>
+<span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">":8080"</span><span class="p">,</span> <span class="kc">nil</span><span class="p">)</span>
+</pre></div>
+
+<p>Then the REST API will be at <code>http://localhost/api/:8080</code>, while the web application will be at <code>http://localhost/app/:8080</code>.</p>
+
+<h2>
+<a name="controllers" class="anchor" href="#controllers"><span class="octicon octicon-link"></span></a>Controllers</h2>
+
+<p>A Ripple controller is a <code>struct</code> with functions that handle the GET, POST, PUT, etc. HTTP methods (custom HTTP methods are also supported). The mapping between URLs and controller functions is done via routes (see below). Each function must start with the method name, followed by the (optional) action name. Each function receives a <code>ripple.Context</code> object that provides access to the full HTTP request, as well as the optional parameters. It also allows responding to the request. The code below shows a very simple controller that handles a GET method:</p>
+
+<div class="highlight"><pre><span class="kd">type</span> <span class="nx">UserController</span> <span class="kd">struct</span> <span class="p">{}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">this</span> <span class="o">*</span><span class="nx">UserController</span><span class="p">)</span> <span class="nx">Get</span><span class="p">(</span><span class="nx">ctx</span> <span class="o">*</span><span class="nx">ripple</span><span class="p">.</span><span class="nx">Context</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Get the user ID:</span>
+    <span class="nx">userId</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Atoi</span><span class="p">(</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">Params</span><span class="p">[</span><span class="s">"id"</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nx">userId</span> <span class="p">&gt;</span> <span class="mi">0</span> <span class="p">{</span>
+        <span class="c1">// If a user ID is provided, we return the user with this ID.</span>
+        <span class="nx">ctx</span><span class="p">.</span><span class="nx">Response</span><span class="p">.</span><span class="nx">Body</span> <span class="p">=</span> <span class="nx">this</span><span class="p">.</span><span class="nx">userCollection</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">userId</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="c1">// If no user ID is provided, we return all the users.</span>
+        <span class="nx">ctx</span><span class="p">.</span><span class="nx">Response</span><span class="p">.</span><span class="nx">Body</span> <span class="p">=</span> <span class="nx">this</span><span class="p">.</span><span class="nx">userCollection</span><span class="p">.</span><span class="nx">GetAll</span><span class="p">()</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>In the above code, <code>ctx.Params["id"]</code> is used to retrieve the user ID, the response is provided by setting <code>ctx.Response.Body</code>. The body will automatically be serialized to JSON.</p>
+
+<p>To handle the POST method, you would write something like this:</p>
+
+<div class="highlight"><pre><span class="kd">func</span> <span class="p">(</span><span class="nx">this</span> <span class="o">*</span><span class="nx">UserController</span><span class="p">)</span> <span class="nx">Post</span><span class="p">(</span><span class="nx">ctx</span> <span class="o">*</span><span class="nx">ripple</span><span class="p">.</span><span class="nx">Context</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">body</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">ioutil</span><span class="p">.</span><span class="nx">ReadAll</span><span class="p">(</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">Request</span><span class="p">.</span><span class="nx">Body</span><span class="p">)</span>
+    <span class="kd">var</span> <span class="nx">user</span> <span class="nx">rippledemo</span><span class="p">.</span><span class="nx">UserModel</span>
+    <span class="nx">json</span><span class="p">.</span><span class="nx">Unmarshal</span><span class="p">(</span><span class="nx">body</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">user</span><span class="p">)</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">Response</span><span class="p">.</span><span class="nx">Body</span> <span class="p">=</span> <span class="nx">this</span><span class="p">.</span><span class="nx">userCollection</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>Finally, more complex actions can be created. For example, this kind of function can be created to handle a REST URL such as <code>/users/123/friends</code>:</p>
+
+<div class="highlight"><pre><span class="kd">func</span> <span class="p">(</span><span class="nx">this</span> <span class="o">*</span><span class="nx">UserController</span><span class="p">)</span> <span class="nx">GetFriends</span><span class="p">(</span><span class="nx">ctx</span> <span class="o">*</span><span class="nx">ripple</span><span class="p">.</span><span class="nx">Context</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">userId</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Atoi</span><span class="p">(</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">Params</span><span class="p">[</span><span class="s">"id"</span><span class="p">])</span>
+    <span class="kd">var</span> <span class="nx">output</span> <span class="p">[]</span><span class="nx">rippledemo</span><span class="p">.</span><span class="nx">UserModel</span>
+    <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">d</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">this</span><span class="p">.</span><span class="nx">friends</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="nx">d</span><span class="p">.</span><span class="nx">UserId1</span> <span class="o">==</span> <span class="nx">userId</span> <span class="p">{</span>
+            <span class="nx">output</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">output</span><span class="p">,</span> <span class="nx">this</span><span class="p">.</span><span class="nx">userCollection</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">UserId2</span><span class="p">))</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">d</span><span class="p">.</span><span class="nx">UserId2</span> <span class="o">==</span> <span class="nx">userId</span> <span class="p">{</span>
+            <span class="nx">output</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">output</span><span class="p">,</span> <span class="nx">this</span><span class="p">.</span><span class="nx">userCollection</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">UserId1</span><span class="p">))</span>
+        <span class="p">}</span>
+    <span class="p">}</span> 
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">Response</span><span class="p">.</span><span class="nx">Body</span> <span class="p">=</span> <span class="nx">output</span>
+<span class="p">}</span>
+</pre></div>
+
+<h2>
+<a name="routes" class="anchor" href="#routes"><span class="octicon octicon-link"></span></a>Routes</h2>
+
+<p>The routes map a given URL to a given controller / action. Before being used in a route, the controllers must first be registered:</p>
+
+<div class="highlight"><pre><span class="c1">// Create some example controllers:</span>
+
+<span class="nx">userController</span> <span class="p">=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">UserController</span><span class="p">)</span>
+<span class="nx">imageController</span> <span class="p">=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">ImageController</span><span class="p">)</span>
+
+<span class="c1">// And register them:</span>
+
+<span class="nx">app</span><span class="p">.</span><span class="nx">RegisterController</span><span class="p">(</span><span class="s">"users"</span><span class="p">,</span> <span class="nx">userController</span><span class="p">)</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">RegisterController</span><span class="p">(</span><span class="s">"images"</span><span class="p">,</span> <span class="nx">imageController</span><span class="p">)</span>
+</pre></div>
+
+<p>Then the routes can be created:</p>
+
+<div class="highlight"><pre><span class="nx">app</span><span class="p">.</span><span class="nx">AddRoute</span><span class="p">(</span><span class="nx">ripple</span><span class="p">.</span><span class="nx">Route</span><span class="p">{</span> <span class="nx">Pattern</span><span class="p">:</span> <span class="s">":_controller/:id/:_action"</span> <span class="p">})</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">AddRoute</span><span class="p">(</span><span class="nx">ripple</span><span class="p">.</span><span class="nx">Route</span><span class="p">{</span> <span class="nx">Pattern</span><span class="p">:</span> <span class="s">":_controller/:id/"</span> <span class="p">})</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">AddRoute</span><span class="p">(</span><span class="nx">ripple</span><span class="p">.</span><span class="nx">Route</span><span class="p">{</span> <span class="nx">Pattern</span><span class="p">:</span> <span class="s">":_controller"</span> <span class="p">})</span>
+</pre></div>
+
+<p>Parameters can be defined by prefixing them with <code>:</code>; they are then accessible from the context object via <code>ctx.Params["id"]</code>.</p>
+
+<p>Route patterns also accept two special parameters:</p>
+
+<ul>
+<li>
+<code>_controller</code>: Match any registered controller.</li>
+<li>
+<code>_action</code>: Match any existing controller action.</li>
+</ul><p>For example, the routes above would match URLs such as "users/123", "images/7", "images/456/metadata", etc. You do not need to specify the supported HTTP methods - whether a method is supported or not is implied from the controller functions. For instance, if the controller has a GetMetadata method, then <code>GET images/456/metadata</code> is automatically supported. Likewise, if it does <em>not</em> have a <code>DeleteMetadata</code> method, <code>DELETE images/456/metadata</code> will <em>not</em> be supported.</p>
+
+<p>Routing can be as flexible as needed. If the automatic mapping of <code>_controller</code> and <code>_action</code> doesn't do the job, it is possible to explicitly specify the controller and action. For example:</p>
+
+<div class="highlight"><pre><span class="nx">app</span><span class="p">.</span><span class="nx">AddRoute</span><span class="p">(</span><span class="nx">Route</span><span class="p">{</span> <span class="nx">Pattern</span><span class="p">:</span> <span class="s">"some/very/custom/url"</span><span class="p">,</span> <span class="nx">Controller</span><span class="p">:</span> <span class="s">"users"</span><span class="p">,</span> <span class="nx">Action</span><span class="p">:</span> <span class="s">"example"</span> <span class="p">})</span>
+</pre></div>
+
+<p>With the above route, doing <code>GET some/very/custom/url</code> would call <code>UserController::GetExample</code></p>
+
+<h2>
+<a name="models" class="anchor" href="#models"><span class="octicon octicon-link"></span></a>Models?</h2>
+
+<p>Ripple does not have built-in support for models since data storage can vary a lot from one application to another. For an example on how to connect a controller to a model, see <a href="demo/controllers/users.go">demo/controllers/users.go</a> and <a href="demo/models/user.go">demo/models/user.go</a>. Usually, you would inject a database connection or other data source into the controller then use that from the various actions.</p>
+
+<h1>
+<a name="testing" class="anchor" href="#testing"><span class="octicon octicon-link"></span></a>Testing</h1>
+
+<p>Ripple is built with testability in mind. The whole framework is fully unit tested, and applications built with the framework can also be easily unit tested. Each controller method takes a <code>ripple.Context</code> object as parameter, which can be mocked for unit testing. The framework also exposes the <code>Application::Dispatch</code> method, which can be used to test the response for a given HTTP request.</p>
+
+<h1>
+<a name="ripple-api-reference" class="anchor" href="#ripple-api-reference"><span class="octicon octicon-link"></span></a>Ripple API reference</h1>
+
+<p>See the <a href="http://godoc.org/github.com/laurent22/ripple">Ripple GoDoc reference</a> for more information.</p>
+
+<h1>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h1>
+
+<p>The MIT License (MIT)</p>
+
+<p>Copyright (c) 2013 Laurent Cozic</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.</p>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/laurent22">laurent22</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
